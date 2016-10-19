@@ -21,7 +21,6 @@ GLOBAL = require('./global');
 import TabScene from './scene_tabs'
 import PhotoView from 'react-native-photo-view'
 import { createAnimatableComponent, View } from 'react-native-animatable';
-const timer = require('react-native-timer');
 import Slider from 'react-native-slider'
 
 export default class EditorScene extends Component {
@@ -116,56 +115,6 @@ export default class EditorScene extends Component {
             });
     }
 
-    //Share new picture
-    cmdSharePict() {
-        if (GLOBAL.TOKEN != null) 
-        {
-            if (this.state.isUploading == false)
-            {
-                Alert.alert(
-                    'HCMUS Avatar',
-                    'Ảnh này sẽ được tải lên trang Facebook của bạn và được đặt trong album mang tên "HCMUS Avatar". \n\nBạn có muốn tiếp tục?',
-                    [
-                        { text: 'Hủy', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
-                        {
-                            text: 'OK', onPress: () => {
-                                {this.snapshot("newPict", false)}
-                                timer.setTimeout(
-                                    this,
-                                    'ShowMsg',
-                                    () => { 
-                                        this.setState({isUploading: true, uploadImage: require('../images/btnFB_disabled.png'), uploadText: 'Đang tải\nlên...'});
-                                        RNFetchBlob.fetch('POST', `https://graph.facebook.com/me/photos?access_token=${GLOBAL.TOKEN}`, {
-                                            'Content-Type': 'multipart/form-data',
-                                        }, [{ name: 'avatar', filename: 'avatar.png', type: 'image/', data: RNFetchBlob.wrap(this.state.imgPath) },
-                                            // elements without property `filename` will be sent as plain text 
-                                            ]).then((resp) => {
-                                                Alert.alert("HCMUS Avatar", "Ảnh đã được tải lên album của bạn thành công!");
-                                                this.setState({isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook'});
-                                            }).catch((err) => {
-                                                Alert.alert("HCMUS Avatar", "Có lỗi xảy ra, vui lòng thử lại sau.");
-                                                this.setState({isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook'});
-                                            })
-                                     },
-                                    500
-                                );
-                            }
-                        }
-                    ]
-                )
-            }
-            else
-            {
-                Alert.alert("HCMUS Avatar", "Ảnh hiện đang trong quá trình tải lên, vui lòng chờ quá trình này hoàn tất trước khi tiếp tục tải lên ảnh mới")
-            }
-        }
-        else
-        {
-            alertLogin(true)
-        }
-
-    }
-
     //Save to device
     cmdSaveToDevice() {
         this.snapshot("newPict", true);
@@ -175,38 +124,24 @@ export default class EditorScene extends Component {
     cmdRotateRight() {
         if (this.state.rotateAngle == 315)
             this.setState({ rotateAngle: 0 });
-        else this.setState({ rotateAngle: this.state.rotateAngle + 45 });
-    }
-
-    //Rotate left
-    cmdRotateLeft() {
-        if (this.state.rotateAngle == -315)
-            this.setState({ rotateAngle: 0 });
-        else this.setState({ rotateAngle: this.state.rotateAngle - 45 });
+        else this.setState({ rotateAngle: this.state.rotateAngle + 90 });
     }
 
     getSavePath(oID)
     {
-        var p = null;
         switch (oID) 
         {
             case 1:
-                p = require('../images/overlay_60year.png');
+                p = require('../images/overlay_1.png');
                 break;
             case 2:
-                p = require('../images/overlay_lgbt.png');
+                p = require('../images/overlay_2.png');
                 break;
             case 3:
-                p = require('../images/overlay_christmas.png');
+                p = require('../images/overlay_3.png');
                 break;
             case 4:
-                p = require('../images/overlay_newyear.png');
-                break;
-            case 5:
-                p = require('../images/overlay_model.png');
-                break;
-            case 6:
-                p = require('../images/overlay_women.png');
+                p = require('../images/overlay_4.png');
                 break;
         }
         return(p);

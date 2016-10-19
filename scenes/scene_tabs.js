@@ -271,12 +271,6 @@ export class TabScene extends Component
                         </View>
 
                         <View style={{ flex: 1 }} />
-
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Image source={require('../images/icon_user.png')} style={{ width: 15, height: 15 }} />
-                            <Text style={{ fontSize: 14, marginLeft: 4 }}>{usetime}</Text>
-                        </View>
-
                     </View>
 
                     {/* Divider */}
@@ -314,21 +308,6 @@ export class TabScene extends Component
                         source={require('../images/icon_menu_main.png')}
                         style={{ width: 22, height: 20 }}
                         resizeMode='stretch' />
-                </TouchableHighlight>
-
-                {/* Grid view butotn */}
-                <TouchableHighlight
-                    onPress={() => {
-                        if (this.state.currentView == 'list')
-                            this.setState({currentView: 'grid', gridviewImage: require('../images/icon_view_list.png'), gridImageMode: 'center'})
-                        else this.setState({currentView: 'list', gridviewImage: require('../images/icon_view_grid.png'), gridImageMode: 'stretch'});
-                    }}
-                    style={{ position: 'absolute', top: 0, right: 0, height: 50, width: 50, justifyContent: 'center', alignItems: 'center' }}
-                    underlayColor={GLOBAL.STATUS_COLOR}>
-                    <Image
-                        source={this.state.gridviewImage}
-                        style={{ width: 22, height: 20 }}
-                        resizeMode={this.state.gridImageMode} />
                 </TouchableHighlight>
 
                 {this.renderList()}
@@ -375,49 +354,14 @@ export class TabScene extends Component
     }
 
     renderList() {
-        if (this.state.currentView == 'list')
-        {
-            return(
-                <ScrollView ref={(ref) => this.mainList_list = ref}>
-                    {this.renderCard(6, 'Mừng ngày Phụ nữ Việt Nam', require('../images/overlay_women.png'), require('../images/profile_sample2.png'), 1, '20/10/2016', '100')}
-                    {this.renderCard(1, 'Mừng kỷ niệm 60 năm', require('../images/overlay_60year.png'), require('../images/profile_sample.png'), 1, '01/01/2017', '213')}
-                    {this.renderCard(2, 'Ủng hộ LGBT', require('../images/overlay_lgbt.png'), require('../images/profile_sample3.jpg'), 0.7, '15/10/2016', '123')}
-                    {this.renderCard(3, 'Mừng Giáng Sinh', require('../images/overlay_christmas.png'), require('../images/profile_tamtit.jpg'), 1, '24/12/2016', '1234')}
-                    {this.renderCard(4, 'Chúc mừng năm mới!', require('../images/overlay_newyear.png'), require('../images/profile_midu.jpg'), 0.7, '01/01/2016', '869')}
-                    {this.renderCard(5, 'Công dân kiểu mẫu', require('../images/overlay_model.png'), require('../images/profile_kieutrinh.jpg'), 0.8, '05/06/2015', '56')}
-                </ScrollView>
-            );
-        }
-        else
-        {
-            return(
-                <ScrollView ref={(ref) => this.mainList_grid = ref}>
-                    { this.renderGridRow(
-                        require('../images/overlay_60year.png'),
-                        1,
-                        500,
-                        require('../images/overlay_lgbt.png'),
-                        2,
-                        1000,
-                        require('../images/overlay_christmas.png'),
-                        3,
-                        1500             
-                    )}
-
-                    { this.renderGridRow(
-                        require('../images/overlay_newyear.png'),
-                        4,
-                        2000,
-                        require('../images/overlay_model.png'),
-                        5,
-                        2500,
-                        require('../images/overlay_women.png'),
-                        6,
-                        3000
-                    )}
-                </ScrollView>
-            );
-        };
+        return(
+            <ScrollView ref={(ref) => this.mainList_list = ref}>
+                {this.renderCard(1, 'Lễ tốt nghiệp 2016', require('../images/overlay_1.png'), require('../images/profile_1.png'), 0.8, '19/10/2016', '100')}
+                {this.renderCard(2, 'Lễ tốt nghiệp 2016', require('../images/overlay_2.png'), require('../images/profile_2.png'), 0.8, '19/10/2016', '213')}
+                {this.renderCard(3, 'Ngày Phụ nữ Việt Nam 2016', require('../images/overlay_3.png'), require('../images/profile_3.png'), 0.8, '18/10/2016', '123')}
+                {this.renderCard(4, 'FIT - HCMUS 20 năm', require('../images/overlay_4.png'), require('../images/profile_4.png'), 0.8, '15/10/2016', '1234')}
+            </ScrollView>
+        );
     }
 }
 
