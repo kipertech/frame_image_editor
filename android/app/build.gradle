@@ -87,7 +87,7 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "com.hcmusavatar"
+        applicationId "com.piksalstudio.hcmus.avatar"
         minSdkVersion 16
         targetSdkVersion 22
         versionCode 1

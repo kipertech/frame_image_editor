@@ -1,4 +1,4 @@
-package com.hcmusavatar;
+package com.piksalstudio.hcmus.avatar;
 
 import android.content.Intent;
 

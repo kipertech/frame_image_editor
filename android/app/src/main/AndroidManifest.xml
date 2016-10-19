@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.hcmusavatar"
+    package="com.piksalstudio.hcmus.avatar"
     android:versionCode="1"
     android:versionName="1.0">
 
@@ -14,7 +14,7 @@
         android:targetSdkVersion="22" />
 
     <application
-      android:name=".MainApplication"
+      android:name=""
       android:allowBackup="true"
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
