@@ -5,7 +5,6 @@ import ReactNative, {
     TouchableOpacity,
     Modal,
     TouchableHighlight,
-    TouchableNativeFeedback,
     StatusBar,
     Dimensions,
     AsyncStorage,
@@ -55,6 +54,7 @@ export class TabScene extends Component
             userID: 'http://hcmus.edu.vn/',
             facebookIcon: require('../images/drawer_facebook.png'),
             facebookText: 'Đăng nhập Facebook',
+            pictResize: 'center',
 
             //Grid View
             currentView: 'list',
@@ -70,11 +70,13 @@ export class TabScene extends Component
         {
             this.setState(
                 {
+                    pictUrl: require('../images/stormtrooper.jpg'),
                     pictBorder: 100,
                     userName: 'Facebook User',
                     userID: 'ID: Unknown',
                     facebookIcon: require('../images/drawer_logout.png'),
                     facebookText: 'Đăng xuất',
+                    pictResize: 'stretch'
                 });
             getProfileImageURL2((data, data2, data3) => { this.setState({ pictUrl: { uri: data }, userName: data2, userID: 'ID: ' + data3 }) })
         }
@@ -88,13 +90,15 @@ export class TabScene extends Component
                     userID: 'http://hcmus.edu.vn/',
                     facebookIcon: require('../images/drawer_facebook.png'),
                     facebookText: 'Đăng nhập Facebook',
+                    pictResize: 'contain'
                 })
         }
     }
 
     //Log in to Facebook
     handleLoginButton() {
-        if (this.state.facebookText != 'Đăng xuất') {
+        if (this.state.facebookText != 'Đăng xuất') 
+        {
             loginFb(true, 
                 (data) => {
                     if (data != false) 
@@ -107,8 +111,9 @@ export class TabScene extends Component
                     }
                 });
         }
-        else {
-            { this.handleLogoutButton() };
+        else
+        {
+            { this.handleLogoutButton() }
         }
     }
 
@@ -150,6 +155,7 @@ export class TabScene extends Component
 
     //Main render function
     render() {
+        let st = Dimensions.get('window').width;
         return (
             <Drawer
                 ref={(ref) => this.drawer = ref}
@@ -176,13 +182,13 @@ export class TabScene extends Component
                         }}>
                             <Image
                                 source={require('../images/drawer_cover.png')}
-                                style={{ position: 'absolute', top: 0, left: 0, width: 320, height: 170 }}
+                                style={{ position: 'absolute', top: 0, left: 0, height: st * 0.8 * 0.6, width: st * 0.8 }}
                                 resizeMode='stretch' />
 
                             <Image
                                 source={this.state.pictUrl}
-                                style={{ width: 80, height: 80, borderRadius: this.state.pictBorder }}
-                                resizeMode='center' />
+                                style={{ width: st / 5, height: st / 5, borderRadius: this.state.pictBorder }}
+                                resizeMode={this.state.pictResize} />
 
                             <Text style={{ fontWeight: 'bold', marginTop: 5, color: 'white' }}>{this.state.userName}</Text>
                             <Text style={{ color: 'white' }}>{this.state.userID}</Text>
@@ -245,12 +251,13 @@ export class TabScene extends Component
                     {/* Picture area */}
                     <View style={{ width: st, height: st, overflow: 'hidden' }}>
                         <Image
-                            animation="fadeIn" duration={1000} delay={1000}
+                            animation="fadeIn" duration={1000} delay={500}
                             source={mainImageSource}
                             style={{ width: st, height: st }}
                             resizeMode='stretch' />
 
                         <Image
+                            animation="fadeIn" duration={1000} delay={1500}
                             source={imageSource}
                             style={{ position: 'absolute', top: 0, left: 0, height: st, width: st, opacity: opa }}
                             resizeMode='stretch' />
@@ -293,7 +300,7 @@ export class TabScene extends Component
                 <View style={{ backgroundColor: GLOBAL.BAR_COLOR, height: 50, padding: 5, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
                     <Image
                         source={require('../images/title.png')}
-                        style={{ width: 160, height: 35 }}
+                        style={{ width: 140, height: 15 }}
                         resizeMode='stretch' />
 
                 </View>
@@ -313,7 +320,7 @@ export class TabScene extends Component
                 <TouchableHighlight
                     onPress={() => {
                         if (this.state.currentView == 'list')
-                            this.setState({currentView: 'grid', gridviewImage: require('../images/icon_view_list.png'), gridImageMode: 'center'});
+                            this.setState({currentView: 'grid', gridviewImage: require('../images/icon_view_list.png'), gridImageMode: 'center'})
                         else this.setState({currentView: 'list', gridviewImage: require('../images/icon_view_grid.png'), gridImageMode: 'stretch'});
                     }}
                     style={{ position: 'absolute', top: 0, right: 0, height: 50, width: 50, justifyContent: 'center', alignItems: 'center' }}
@@ -361,24 +368,30 @@ export class TabScene extends Component
         )
     }
 
+    scrollToTop()
+    {
+        this.mainList_list.scrollTo({x: 0});
+        this.mainList_grid.scrollTo({x: 0});
+    }
+
     renderList() {
         if (this.state.currentView == 'list')
         {
             return(
-                <ScrollView>
+                <ScrollView ref={(ref) => this.mainList_list = ref}>
                     {this.renderCard(6, 'Mừng ngày Phụ nữ Việt Nam', require('../images/overlay_women.png'), require('../images/profile_sample2.png'), 1, '20/10/2016', '100')}
                     {this.renderCard(1, 'Mừng kỷ niệm 60 năm', require('../images/overlay_60year.png'), require('../images/profile_sample.png'), 1, '01/01/2017', '213')}
-                    {this.renderCard(2, 'Ủng hộ LGBT', require('../images/overlay_lgbt.png'), require('../images/profile_sample.png'), 0.7, '15/10/2016', '123')}
-                    {this.renderCard(3, 'Mừng Giáng Sinh', require('../images/overlay_christmas.png'), require('../images/profile_sample.png'), 1, '24/12/2016', '1234')}
-                    {this.renderCard(4, 'Chúc mừng năm mới!', require('../images/overlay_newyear.png'), require('../images/profile_sample.png'), 0.7, '01/01/2016', '869')}
-                    {this.renderCard(5, 'Công dân kiểu mẫu', require('../images/overlay_model.png'), require('../images/profile_sample.png'), 0.8, '05/06/2015', '56')}
+                    {this.renderCard(2, 'Ủng hộ LGBT', require('../images/overlay_lgbt.png'), require('../images/profile_sample3.jpg'), 0.7, '15/10/2016', '123')}
+                    {this.renderCard(3, 'Mừng Giáng Sinh', require('../images/overlay_christmas.png'), require('../images/profile_tamtit.jpg'), 1, '24/12/2016', '1234')}
+                    {this.renderCard(4, 'Chúc mừng năm mới!', require('../images/overlay_newyear.png'), require('../images/profile_midu.jpg'), 0.7, '01/01/2016', '869')}
+                    {this.renderCard(5, 'Công dân kiểu mẫu', require('../images/overlay_model.png'), require('../images/profile_kieutrinh.jpg'), 0.8, '05/06/2015', '56')}
                 </ScrollView>
             );
         }
         else
         {
             return(
-                <ScrollView>
+                <ScrollView ref={(ref) => this.mainList_grid = ref}>
                     { this.renderGridRow(
                         require('../images/overlay_60year.png'),
                         1,
@@ -404,7 +417,7 @@ export class TabScene extends Component
                     )}
                 </ScrollView>
             );
-        }
+        };
     }
 }
 

@@ -38,7 +38,7 @@ export default class PopUpSelection extends Component {
   //Take picture with camera
   pickSingleWithCamera() {
     ImagePicker.openCamera({
-      cropping: true,
+      cropping: false,
       width: 500,
       height: 500
     })
@@ -61,7 +61,7 @@ export default class PopUpSelection extends Component {
     ImagePicker.openPicker({
       width: 500,
       height: 500,
-      cropping: true,
+      cropping: false,
       compressVideo: true
     })
       .then(image => {
