@@ -33,6 +33,7 @@ import { createAnimatableComponent, View } from 'react-native-animatable';
 import { Actions } from 'react-native-router-flux';
 import Drawer from 'react-native-drawer';
 import PopUpSelection from './modal';
+import RNFS from 'react-native-fs';
 
 GLOBAL = require('./global');
 
@@ -44,6 +45,7 @@ export class TabScene extends Component
     constructor(props) {
         super(props);
         this.state = {
+            fetch: [],
             drawerOpen: false,
             visible: false,
 
@@ -127,6 +129,24 @@ export class TabScene extends Component
             [{ text: 'OK' }]
         )
         { this.checkFacebook(false) };
+    }
+
+    download(item, index) {
+        RNFS.downloadFile({
+            fromUrl: `http://128.199.226.4:8000${item.url_avatar}`,
+            toFile: `${RNFS.DocumentDirectoryPath}/HCMUS${item._id}.png`,
+        }).promise
+            .then((result) => { console.log(result) }).done();
+    }
+    componentDidMount() {
+        let array = GLOBAL.FETCHDATA;
+        fetch('http://128.199.226.4:8000/users/getimages')
+            .then((response) => response.json())
+            .then((responseJson) => {
+                this.setState({ fetch: responseJson });
+                responseJson.forEach((item, index) => { this.download(item, index) });
+
+            })
     }
 
     componentWillMount() {
@@ -229,12 +249,11 @@ export class TabScene extends Component
     }
 
     //Render items in list
-    renderCard(id, title, imageSource, mainImageSource, opa, time, usetime, delayTime) {
+    renderCard(item, index) {
         let st = Dimensions.get('window').width + 5;
         return (
-            <TouchableOpacity onPress={() => this.openSelection(id)}>
-                <View 
-                    animation="bounceInUp" duration={500} delay={delayTime}
+            <TouchableOpacity key={index} onPress={() => this.openSelection(item._id)}>
+                <View
                     style={{ flex: 1, backgroundColor: 'white' }}
                     style={{ backgroundColor: 'white', height: st + 105, width: st }}>
 
@@ -245,21 +264,20 @@ export class TabScene extends Component
                             style={{ width: 45, height: 37, marginRight: 10, marginLeft: 10 }}
                             resizeMode='stretch' />
 
-                        <Text>{title}</Text>
+                        <Text>{item.description}</Text>
                     </View>
 
                     {/* Picture area */}
                     <View style={{ width: st, height: st, overflow: 'hidden' }}>
                         <Image
-                            animation="fadeIn" duration={1000} delay={500}
-                            source={mainImageSource}
+
+                            source={{ uri: `http://128.199.226.4:8000/${item.url_avatar}` }}
                             style={{ width: st, height: st }}
                             resizeMode='stretch' />
 
                         <Image
-                            animation="fadeIn" duration={1000} delay={1500}
-                            source={imageSource}
-                            style={{ position: 'absolute', top: 0, left: 0, height: st, width: st, opacity: opa }}
+                            source={{ uri: `http://128.199.226.4:8000/${item.url_img}` }}
+                            style={{ position: 'absolute', top: 0, left: 0, height: st, width: st, opacity: 1 }}
                             resizeMode='stretch' />
                     </View>
 
@@ -279,7 +297,9 @@ export class TabScene extends Component
 
             </TouchableOpacity>
         )
+
     }
+
 
     //Render the tabs
     renderActionBar() {
@@ -320,11 +340,11 @@ export class TabScene extends Component
     //Render card in grid view
     renderGridCard(imageSource, eventHandler, delayTime) {
         let st = Dimensions.get('window').width / 3;
-        return(
+        return (
             <TouchableOpacity onPress={eventHandler}>
                 <View
                     animation="fadeIn" duration={delayTime}
-                    style = {{width: st, height: st, alignItems: 'center', justifyContent: 'center'}} >
+                    style={{ width: st, height: st, alignItems: 'center', justifyContent: 'center' }} >
 
                     <Image
                         source={imageSource}
@@ -354,15 +374,13 @@ export class TabScene extends Component
     }
 
     renderList() {
-        return(
-            <ScrollView ref={(ref) => this.mainList_list = ref}>
-                {this.renderCard(1, 'Lễ tốt nghiệp 2016', require('../images/overlay_1.png'), require('../images/profile_1.png'), 0.8, '19/10/2016', '100')}
-                {this.renderCard(2, 'Lễ tốt nghiệp 2016', require('../images/overlay_2.png'), require('../images/profile_2.png'), 0.8, '19/10/2016', '213')}
-                {this.renderCard(3, 'Ngày Phụ nữ Việt Nam 2016', require('../images/overlay_3.png'), require('../images/profile_3.png'), 0.8, '18/10/2016', '123')}
-                {this.renderCard(4, 'FIT - HCMUS 20 năm', require('../images/overlay_4.png'), require('../images/profile_4.png'), 0.8, '15/10/2016', '1234')}
-            </ScrollView>
-        );
+            return (
+                <ScrollView ref={(ref) => this.mainList_list = ref}>
+                    {this.state.fetch.map((item, index) => this.renderCard(item, index))}
+                </ScrollView>
+            )
     }
+
 }
 
 const styles = StyleSheet.create({

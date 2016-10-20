@@ -22,6 +22,7 @@ import TabScene from './scene_tabs'
 import PhotoView from 'react-native-photo-view'
 import { createAnimatableComponent, View } from 'react-native-animatable';
 import Slider from 'react-native-slider'
+import RNFS from 'react-native-fs';
 
 export default class EditorScene extends Component {
     constructor(props) {
@@ -95,6 +96,7 @@ export default class EditorScene extends Component {
                                 [{ text: 'OK', onPress: () => Actions.pop()} ]
                             );
                         }
+
                         this.setState({ imgPath: result })
                      })
                     .catch((e) =>
@@ -127,24 +129,8 @@ export default class EditorScene extends Component {
         else this.setState({ rotateAngle: this.state.rotateAngle + 90 });
     }
 
-    getSavePath(oID)
-    {
-        switch (oID) 
-        {
-            case 1:
-                p = require('../images/overlay_1.png');
-                break;
-            case 2:
-                p = require('../images/overlay_2.png');
-                break;
-            case 3:
-                p = require('../images/overlay_3.png');
-                break;
-            case 4:
-                p = require('../images/overlay_4.png');
-                break;
-        }
-        return(p);
+    getSavePath(oID) {
+        return ({ uri: `file://${RNFS.DocumentDirectoryPath}/HCMUS${oID}.png` });
     }
 
     cmdReset()
@@ -170,10 +156,10 @@ export default class EditorScene extends Component {
                     onLoad={() => console.log("Image loaded!")}
                     style={{ width: this.state.imageSize, height: this.state.imageSize, transform: [{ rotate: this.state.rotateAngle + ' deg' }] }} />
 
-                <Image 
-                    source={this.getSavePath(overlayID)} 
-                    style={{top: 0, left: 0, position: 'absolute', opacity: this.state.overlayOpacity, width: this.state.overlaySize, height: this.state.overlaySize}}
-                    imageSize='contain'/>
+                <Image
+                    source={{ uri: `file://${RNFS.DocumentDirectoryPath}/HCMUS${overlayID}.png` }}
+                    style={{ top: 0, left: 0, position: 'absolute', opacity: this.state.overlayOpacity, width: this.state.overlaySize, height: this.state.overlaySize }}
+                    imageSize='contain' />
 
             </View>
         )
