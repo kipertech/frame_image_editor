@@ -106,7 +106,11 @@ export default class PopUpSelection extends Component {
                             style={[styles.selectionImage]}
                             resizeMode='center'
                         />
+<<<<<<< HEAD
                         <Text style={[styles.selectionText]}>Ảnh đại diện Facebook</Text>
+=======
+                        <Text style={{ fontSize: 15 }}>Ảnh đại diện Facebook</Text>
+>>>>>>> 281849a7e04fe3fbf0927495a85f95872ce3c373
                     </View>
                 </TouchableNativeFeedback>
 
@@ -121,7 +125,11 @@ export default class PopUpSelection extends Component {
                             style={[styles.selectionImage]}
                             resizeMode='center'
                         />
+<<<<<<< HEAD
                         <Text style={[styles.selectionText]}>Thư viện</Text>
+=======
+                        <Text style={{ fontSize: 15 }}>Thư viện</Text>
+>>>>>>> 281849a7e04fe3fbf0927495a85f95872ce3c373
                     </View>
                 </TouchableNativeFeedback>
 
@@ -136,7 +144,11 @@ export default class PopUpSelection extends Component {
                             style={[styles.selectionImage]}
                             resizeMode='center'
                          />
+<<<<<<< HEAD
                         <Text style={[styles.selectionText]}>Chụp hình</Text>
+=======
+                        <Text style={{ fontSize: 15 }}>Chụp hình</Text>
+>>>>>>> 281849a7e04fe3fbf0927495a85f95872ce3c373
                     </View>
                 </TouchableNativeFeedback>
             </Modal>
@@ -184,10 +196,13 @@ var styles = StyleSheet.create({
         marginRight: 10,
         height: 36,
         width: 36
+<<<<<<< HEAD
     },
 
     selectionText: {
         fontSize: 15,
+=======
+>>>>>>> 281849a7e04fe3fbf0927495a85f95872ce3c373
     }
 
 });
