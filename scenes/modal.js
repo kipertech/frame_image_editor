@@ -16,7 +16,7 @@ import ImagePicker from 'react-native-image-crop-picker'
 import Modal from 'react-native-modalbox';
 import { Actions } from 'react-native-router-flux'
 import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
-import { alertLogin, loginFb, getPictURL, getFBImagePath, getImageUri } from './login'
+import { alertLogin, loginFb, getPictURL, getProfileImageURL, getImageUri } from './login'
 GLOBAL = require('./global');
 
 export default class PopUpSelection extends Component {
@@ -32,7 +32,19 @@ export default class PopUpSelection extends Component {
     openEditor(path) {
         if (this.props.onEditor == false)
             Actions.editor({ data: path })
-        else Actions.newEditor({ data: path });
+        else 
+        {
+            if (GLOBAL.CURRENTEDITOR == 1)
+            {
+                GLOBAL.CURRENTEDITOR = 2;
+                Actions.newEditor2({ data: path });
+            }
+            else 
+            {
+                GLOBAL.CURRENTEDITOR = 1;
+                Actions.newEditor1({ data: path });
+            }
+        }
     }
 
     //Take picture with camera
@@ -99,14 +111,29 @@ export default class PopUpSelection extends Component {
                 />
 
                 {/* From Facebook */}
-                <TouchableNativeFeedback onPress={() => { this.refs.mainModal.close(); this.checkOnEditor(); alertLogin(false); } } >
+                <TouchableNativeFeedback onPress={() => { 
+                    this.refs.mainModal.close(); 
+                    this.checkOnEditor();
+                    if (GLOBAL.TOKEN == null)
+                        alertLogin(false);
+                    else 
+                        getProfileImageURL((data) => {
+                            if (data == false)
+                                Alert.alert('HCMUS Avatar', 'Lỗi trong khi lấy ảnh đại diện từ Facebook, xin vui lòng thử lại sau');
+                                
+                            //Close progress dialog
+                            GLOBAL.MAINCOMPONENT.closeProgress();
+                            if (GLOBAL.EDITORCOMPONENT != null)
+                                GLOBAL.EDITORCOMPONENT.closeProgress();
+                        });
+                }}>
                     <View flexDirection='row' style={[styles.selectionItem]}>
                         <Image
-                            source={require('../images/selection_facebook.png')}
+                            source={require('../images/selection_FB.png')}
                             style={[styles.selectionImage]}
                             resizeMode='center'
                         />
-                        <Text style={{ fontSize: 15 }}>Ảnh đại diện Facebook</Text>
+                        <Text style={[styles.selectionText]}>Ảnh đại diện Facebook</Text>
                     </View>
                 </TouchableNativeFeedback>
 
@@ -119,9 +146,9 @@ export default class PopUpSelection extends Component {
                         <Image
                             source={require('../images/selection_gallery.png')}
                             style={[styles.selectionImage]}
-                            resizeMode='center'
+                            resizeMode='stretch'
                         />
-                        <Text style={{ fontSize: 15 }}>Thư viện</Text>
+                        <Text style={[styles.selectionText]}>Thư viện</Text>
                     </View>
                 </TouchableNativeFeedback>
 
@@ -134,9 +161,9 @@ export default class PopUpSelection extends Component {
                         <Image
                             source={require('../images/selection_camera.png')}
                             style={[styles.selectionImage]}
-                            resizeMode='center'
+                            resizeMode='stretch'
                          />
-                        <Text style={{ fontSize: 15 }}>Chụp hình</Text>
+                        <Text style={[styles.selectionText]}>Chụp hình</Text>
                     </View>
                 </TouchableNativeFeedback>
             </Modal>
@@ -174,16 +201,19 @@ var styles = StyleSheet.create({
 
     selectionItem: {
         alignItems: 'center',
-        marginTop: 5,
-        marginBottom: 5,
-        paddingLeft: 5,
-        paddingRight: 5
+        height: 46,
+        padding: 5,
+        paddingLeft: 10
     },
 
     selectionImage: {
         marginRight: 10,
-        height: 36,
-        width: 36
+        height: 21,
+        width: 25
+    },
+
+    selectionText: {
+        fontSize: 15,
     }
 
 });

@@ -41,17 +41,14 @@ export function checkLoggedIn(callback)
 
 export function alertLogin(isUpload) 
 {
-    if (GLOBAL.TOKEN == null || GLOBAL.TOKEN == undefined) {
-        Alert.alert(
-            'HCMUS Avatar',
-            'Để tiếp tục bạn phải đăng nhập vào tài khoản Facebook của mình. Đăng nhập ngay bây giờ?',
-            [
-                { text: 'Hủy' },
-                { text: 'OK', onPress: () => loginFb(isUpload, (data) => console.log(data) ) }
-            ]
-        )
-    }
-    else getProfileImageURL();
+    Alert.alert(
+        'HCMUS Avatar',
+        'Để tiếp tục bạn phải đăng nhập vào tài khoản Facebook của mình. Đăng nhập ngay bây giờ?',
+        [
+            { text: 'Hủy' },
+            { text: 'OK', onPress: () => loginFb(isUpload, (data) => console.log(data) ) }
+        ]
+    )
 }
 
 export function loginFb(isUpload, callback) 
@@ -70,7 +67,15 @@ export function loginFb(isUpload, callback)
 
                                 //Open editor if logging in indirectly
                                 if (isUpload == false)
-                                    getProfileImageURL();
+                                    getProfileImageURL((data) => {
+                                        if (data == false)
+                                            Alert.alert('HCMUS Avatar', 'Lỗi trong khi lấy ảnh đại diện từ Facebook, xin vui lòng thử lại sau');
+                                            
+                                        //Close progress dialog
+                                        GLOBAL.MAINCOMPONENT.closeProgress();
+                                        if (GLOBAL.EDITORCOMPONENT != null)
+                                            GLOBAL.EDITORCOMPONENT.closeProgress();
+                                    });
                                 
                                 { GLOBAL.mainCallback(); }
 
@@ -97,11 +102,14 @@ export function loginFb(isUpload, callback)
     })
 }
 
-export function getProfileImageURL() 
+export function getProfileImageURL(callback) 
 {
     checkInternet(data => {
         if (data)
         {
+            GLOBAL.MAINCOMPONENT.openProgress();
+            if (GLOBAL.EDITORCOMPONENT != null)
+                GLOBAL.EDITORCOMPONENT.openProgress();
             idUrl = `https://graph.facebook.com/me?access_token=${GLOBAL.TOKEN}`;
             fetch(idUrl)
                 .then((response) => response.json())
@@ -109,7 +117,12 @@ export function getProfileImageURL()
                     pictUrl = `https://graph.facebook.com/v2.3/${responseData.id}/picture?width=500&redirect=false&access_token=${GLOBAL.TOKEN}`;
                     fetch(pictUrl)
                         .then(response => response.json())
-                        .then(responseData => { getImageUri(responseData.data.url); })
+                        .then(responseData => { 
+                            getImageUri(responseData.data.url);
+                            if (responseData.data.url != null && responseData.data.url != undefined)
+                                callback(true)
+                            else callback(false); 
+                        })
                         .done();
                 })
                 .done();
@@ -141,5 +154,17 @@ export function getProfileImageURL2(callback) {
 export function getImageUri(path) {
     if (GLOBAL.ONEDITOR == false)
       Actions.editor({ data: path });
-    else Actions.newEditor({ data:path });
+    else 
+    {
+        if (GLOBAL.CURRENTEDITOR == 1)
+        {
+            GLOBAL.CURRENTEDITOR = 2;
+            Actions.newEditor2({ data: path });
+        }
+        else 
+        {
+            GLOBAL.CURRENTEDITOR = 1;
+            Actions.newEditor1({ data: path });
+        }
+    }
 }

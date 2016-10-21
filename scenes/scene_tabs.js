@@ -3,13 +3,15 @@ import ReactNative, {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Modal,
     TouchableHighlight,
     StatusBar,
     Dimensions,
     AsyncStorage,
     Alert,
-    ListView
+    ListView,
+    ActivityIndicator,
+    BackAndroid,
+    RefreshControl
 } from 'react-native';
 
 import Menu, {
@@ -23,6 +25,7 @@ import {
     alertLogin,
     loginFb,
     checkLoggedIn,
+    checkInternet,
     getProfileImageURL,
     getProfileImageURL2
 } from './login';
@@ -33,7 +36,10 @@ import { createAnimatableComponent, View } from 'react-native-animatable';
 import { Actions } from 'react-native-router-flux';
 import Drawer from 'react-native-drawer';
 import PopUpSelection from './modal';
+import LoadingModal from './loadingModal';
+import {checkPermission, requestPermission} from 'react-native-android-permissions';
 import RNFS from 'react-native-fs';
+import moment from 'moment';
 
 GLOBAL = require('./global');
 
@@ -45,7 +51,6 @@ export class TabScene extends Component
     constructor(props) {
         super(props);
         this.state = {
-            fetch: [],
             drawerOpen: false,
             visible: false,
 
@@ -62,8 +67,98 @@ export class TabScene extends Component
             currentView: 'list',
             gridviewImage: require('../images/icon_view_grid.png'),
             gridImageMode: 'stretch',
+
+            //Server
+            fetchData: [],
+            isConnected: false,
+            refreshing: false,
         };
     }
+
+    componentWillMount() {
+        checkLoggedIn((data) => {
+            if (data != null)
+                this.checkFacebook(true);
+            else
+                this.checkFacebook(false);
+        });
+        GLOBAL.MAINCOMPONENT = this;
+        this.checkConnection();
+    }
+
+    componentDidMount() {
+        //Get read storage permission
+        checkPermission("android.permission.READ_EXTERNAL_STORAGE")
+        .then((result) => 
+            console.log("Already granted Read Storage!", result)
+            , (result) => {
+                requestPermission("android.permission.READ_EXTERNAL_STORAGE")
+                .then((result) => {
+                    console.log("Granted Read Storage!", result);    
+                }, (result) => {
+                    console.log("Not Granted Read Storage!");
+                });
+            });
+
+        //Get write storage permission
+        checkPermission("android.permission.WRITE_EXTERNAL_STORAGE")
+        .then((result) => 
+            console.log("Already granted Write Storage!", result)
+            , (result) => {
+                requestPermission("android.permission.WRITE_EXTERNAL_STORAGE")
+                .then((result) => {
+                    console.log("Granted Write Storage!", result);    
+                }, (result) => {
+                    console.log("Not Granted Write Storage!");
+                });
+            });
+
+        this.fetchImageData();
+    }
+
+    //Fetch image JSON from server
+    fetchImageData()
+    {
+        checkInternet(data => {
+            if (data)
+            {
+                this.refs.progressFetch.open();
+                this.setState({refreshing: true});
+                fetch(GLOBAL.FATHERLINK + '/users/getimages')
+                .then((response) => response.json())
+                .then((responseJson) => {
+                    this.setState({ fetchData: responseJson });
+                    responseJson.reverse().forEach((item, index) => { this.downloadImage(item, index) });
+                    this.refs.progressFetch.close();
+                    this.setState({refreshing: false});
+                })
+            }
+        })
+    }
+
+    //Check if Internet conenction is available
+    checkConnection()
+    {
+        let check = false;
+        checkInternet((data) => {
+            if (data)
+                this.setState({isConnected: true})
+            else 
+                this.setState({isConnected: false});
+            check = data;
+        })
+        return(check);
+    }
+
+    //Download image data from server
+    downloadImage(item, index) 
+    {
+        RNFS.downloadFile({
+            fromUrl: GLOBAL.FATHERLINK + `${item.url_avatar}`,
+            toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`,
+        }).promise
+            .then((result) => { console.log(result) }).done();
+     }
 
     //Update Facebook info to drawer
     checkFacebook(isAvailable) 
@@ -129,34 +224,6 @@ export class TabScene extends Component
             [{ text: 'OK' }]
         )
         { this.checkFacebook(false) };
-    }
-
-    download(item, index) {
-        RNFS.downloadFile({
-            fromUrl: `http://128.199.226.4:8000${item.url_avatar}`,
-            toFile: `${RNFS.DocumentDirectoryPath}/HCMUS${item._id}.png`,
-        }).promise
-            .then((result) => { console.log(result) }).done();
-    }
-    componentDidMount() {
-        let array = GLOBAL.FETCHDATA;
-        fetch('http://128.199.226.4:8000/users/getimages')
-            .then((response) => response.json())
-            .then((responseJson) => {
-                this.setState({ fetch: responseJson });
-                responseJson.forEach((item, index) => { this.download(item, index) });
-
-            })
-    }
-
-    componentWillMount() {
-        checkLoggedIn((data) => {
-            if (data != null)
-                this.checkFacebook(true);
-            else
-                this.checkFacebook(false);
-        });
-        GLOBAL.MAINCOMPONENT = this;
     }
 
     //Selections for image picker
@@ -248,8 +315,17 @@ export class TabScene extends Component
         )
     }
 
+    openProgress() {
+        this.refs.progressDialog.open();
+    }
+
+    closeProgress() {
+        this.refs.progressDialog.close();
+    }
+
     //Render items in list
     renderCard(item, index) {
+        let newDate = moment(item.createdAt).format('DD-MM-YYYY')
         let st = Dimensions.get('window').width + 5;
         return (
             <TouchableOpacity key={index} onPress={() => this.openSelection(item._id)}>
@@ -270,13 +346,12 @@ export class TabScene extends Component
                     {/* Picture area */}
                     <View style={{ width: st, height: st, overflow: 'hidden' }}>
                         <Image
-
-                            source={{ uri: `http://128.199.226.4:8000/${item.url_avatar}` }}
+                            source={{ uri: GLOBAL.FATHERLINK + `${item.url_img}` }}
                             style={{ width: st, height: st }}
                             resizeMode='stretch' />
 
                         <Image
-                            source={{ uri: `http://128.199.226.4:8000/${item.url_img}` }}
+                            source={{ uri: GLOBAL.FATHERLINK + `${item.url_avatar}` }}
                             style={{ position: 'absolute', top: 0, left: 0, height: st, width: st, opacity: 1 }}
                             resizeMode='stretch' />
                     </View>
@@ -284,11 +359,17 @@ export class TabScene extends Component
                     {/* Info area */}
                     <View style={{ height: 45, width: st, paddingLeft: 15, paddingRight: 15, flexDirection: 'row', alignItems: 'center' }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+
                             <Image source={require('../images/icon_calendar.png')} style={{ width: 15, height: 15 }} />
-                            <Text style={{ fontSize: 14, marginLeft: 4 }}>{time}</Text>
+                            <Text style={{ fontSize: 14, marginLeft: 4 }}>{newDate}</Text>
                         </View>
 
                         <View style={{ flex: 1 }} />
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Image source={require('../images/icon_user.png')} style={{ width: 15, height: 15 }} />
+                            <Text style={{ fontSize: 14, marginLeft: 4 }}>{item.num_user}</Text>
+                        </View>
                     </View>
 
                     {/* Divider */}
@@ -299,7 +380,6 @@ export class TabScene extends Component
         )
 
     }
-
 
     //Render the tabs
     renderActionBar() {
@@ -333,54 +413,47 @@ export class TabScene extends Component
                 {this.renderList()}
 
                 <PopUpSelection ref='mainModal' onEditor={false} />
+
+                <LoadingModal ref='progressDialog' loadingText='Đang tải ảnh đại diện Facebook...'/>
+                <LoadingModal ref='progressFetch' loadingText='Đang tải dữ liệu từ máy chủ, xin vui lòng đợi...'/>
             </View>
         );
     }
 
-    //Render card in grid view
-    renderGridCard(imageSource, eventHandler, delayTime) {
-        let st = Dimensions.get('window').width / 3;
-        return (
-            <TouchableOpacity onPress={eventHandler}>
-                <View
-                    animation="fadeIn" duration={delayTime}
-                    style={{ width: st, height: st, alignItems: 'center', justifyContent: 'center' }} >
-
-                    <Image
-                        source={imageSource}
-                        style={{ width: st, height: st }}
-                        resizeMode='stretch' />
-
-                </View>
-            </TouchableOpacity>
-        )
-    }
-
-    renderGridRow(link1, id1, delay1, link2, id2, delay2, link3, id3, delay3) {
-        let st = Dimensions.get('window').width / 3;
-        return(
-            <View style={{height: st, width: st*3 + 5 , flexDirection: 'row', alignItems: 'center', justifyContent: 'center'}}>
-                { this.renderGridCard(link1, () => this.openSelection(id1), delay1)}
-                { this.renderGridCard(link2, () => this.openSelection(id2), delay2)}
-                { this.renderGridCard(link3, () => this.openSelection(id3), delay3)}
-            </View>
-        )
-    }
-
-    scrollToTop()
+    renderList() 
     {
-        this.mainList_list.scrollTo({x: 0});
-        this.mainList_grid.scrollTo({x: 0});
-    }
-
-    renderList() {
-            return (
+        if (this.state.isConnected)
+        {
+            return(
                 <ScrollView ref={(ref) => this.mainList_list = ref}>
-                    {this.state.fetch.map((item, index) => this.renderCard(item, index))}
+                    <RefreshControl
+                        refreshing={this.state.refreshing}
+                        onRefresh={() => {this.checkConnection(); this.fetchImageData()}}
+                    />
+                    {this.state.fetchData.map((item, index) => this.renderCard(item, index))}
                 </ScrollView>
-            )
-    }
+            );
+        }
+        else
+        {
+            return(
+                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                    <TouchableOpacity onPress={() => {
+                        this.checkConnection();
+                        this.fetchImageData();
+                    }}>
+                        <Image
+                            source={require('../images/notification_notconnected.png')}
+                            resizeMode='center'
+                            style={{ marginBottom: 10 }}
+                        />
+                    </TouchableOpacity>
 
+                    <Text>Không có kết nối Internet</Text>
+                </View>
+            )
+        }
+    }
 }
 
 const styles = StyleSheet.create({
