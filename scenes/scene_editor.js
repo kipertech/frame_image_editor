@@ -9,19 +9,25 @@ import {
     AsyncStorage, 
     Alert, 
     Dimensions, 
-    StatusBar  } from 'react-native';
+    StatusBar,
+    ActivityIndicator,
+    BackAndroid
+  } from 'react-native';
 import { LoginButton, AccessToken, LoginManager, GraphRequestManager, GraphRequest } from 'react-native-fbsdk';
 import { takeSnapshot } from 'react-native-view-shot';
 import Button from 'react-native-button';
 import RNFetchBlob from 'react-native-fetch-blob';
 import {Actions} from 'react-native-router-flux';
-import PopupSelection from './modal'
-import {alertLogin, loginFb, getPictURL, getFBImagePath} from './login';
+import PopupSelection from './modal';
+import LoadingModal from './loadingModal';
+import {alertLogin, loginFb, checkInternet, getPictURL, getFBImagePath} from './login';
 GLOBAL = require('./global');
-import TabScene from './scene_tabs'
-import PhotoView from 'react-native-photo-view'
+import TabScene from './scene_tabs';
+import PhotoView from 'react-native-photo-view';
 import { createAnimatableComponent, View } from 'react-native-animatable';
-import Slider from 'react-native-slider'
+import Slider from 'react-native-slider';
+import RNFS from 'react-native-fs';
+const timer = require('react-native-timer');
 
 export default class EditorScene extends Component {
     constructor(props) {
@@ -29,6 +35,8 @@ export default class EditorScene extends Component {
         this.state = {
             previewSource: { uri: 'http://www.valleyspuds.com/wp-content/uploads/Russet-Potatoes-cut.jpg' },
             value: {
+                width: 512,
+                height: 512,
                 format: "png",
                 quality: 1,
                 result: "file",
@@ -67,13 +75,117 @@ export default class EditorScene extends Component {
                 self.setState({ loginDisabled: true })
             else self.setState({ loginDisabled: false }); 
         });
+        GLOBAL.EDITORCOMPONENT = this;
     }
+
+    backButtonPressed() 
+    {
+        if (this.state.isUploading == false)
+        {
+            Actions.pop();
+            GLOBAL.EDITORCOMPONENT = null;
+        }
+        else
+            Alert.alert("HCMUS Avatar", "Ảnh hiện đang trong quá trình tải lên, vui lòng chờ quá trình này hoàn tất")
+    }
+
+    /*
     
+    componentDidMount() {
+        //Override Android Back button
+        BackAndroid.addEventListener('hardwareBackPress', () => this.backButtonPressed());
+    }
+
+    componentWillUnmount() {
+        BackAndroid.removeEventListener('hardwareBackPress');
+    }
+
+    */
+
+    componentWillMount() {
+        GLOBAL.EDITORCOMPONENT = null;
+    }
+
     openModal3(id) {
         this.refs.modal3.open();
     }
+
+    //Share new picture
+    cmdSharePict() 
+    {
+        if (GLOBAL.TOKEN != null) 
+        {
+            if (this.state.isUploading == false)
+            {
+                Alert.alert(
+                    'HCMUS Avatar',
+                    'Ảnh này sẽ được tải lên trang Facebook của bạn và được đặt trong album mang tên "HCMUS Avatar". \n\nBạn có muốn tiếp tục?',
+                    [
+                        { text: 'Hủy', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+                        {
+                            text: 'OK', onPress: () => {
+                                checkInternet(data => {
+                                    if (data)
+                                    {
+                                        fetch(GLOBAL.FATHERLINK + '/users/updatenum', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                id: GLOBAL.OVERLAYID
+                                            })
+                                        });
+
+                                        takeSnapshot(this.refs["newPict"], this.state.value)
+                                            .then(res => this.setState({
+                                                error: null,
+                                                res,
+                                                previewSource: {
+                                                    uri:
+                                                    this.state.value.result === "base64"
+                                                        ? "data:image/" + this.state.value.format + ";base64," + res
+                                                        : res
+                                                }
+                                            }, () => {
+                                                this.setState({ isUploading: true, uploadImage: require('../images/btnFB_disabled.png'), uploadText: 'Đang tải\nlên...' });
+                                                RNFetchBlob.fetch('POST', `https://graph.facebook.com/me/photos?access_token=${GLOBAL.TOKEN}`, {
+                                                    'Content-Type': 'multipart/form-data',
+                                                }, [{ name: 'avatar', filename: 'avatar.png', type: 'image/', data: RNFetchBlob.wrap(this.state.previewSource.uri) },
+                                                        // elements without property filename will be sent as plain text 
+                                                    ]).then((resp) => {
+                                                        Alert.alert("HCMUS Avatar", "Ảnh đã được tải lên album của bạn thành công!");
+                                                        this.setState({ isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook' });
+                                                    }).catch((err) => {
+                                                        Alert.alert("HCMUS Avatar", "Có lỗi xảy ra, vui lòng thử lại sau.");
+                                                        this.setState({ isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook' });
+                                                    })
+                                            }))
+                                    }
+                                    else
+                                    {
+                                        Alert.alert("HCMUS Avatar", "Không có kết nối Internet, tải ảnh lên Facebook không khả dụng")
+                                    }
+                                })
+                                
+                            }
+                        }
+                    ]
+                )
+            }
+            else
+            {
+                Alert.alert("HCMUS Avatar", "Ảnh hiện đang trong quá trình tải lên, vui lòng chờ quá trình này hoàn tất trước khi tiếp tục tải lên ảnh mới")
+            }
+        }
+        else
+        {
+            alertLogin(true)
+        }
+    }
+
     //Snapshot view
-    snapshot(refName, showAlert) {
+    snapshot(refName, showAlert, callback) {
         takeSnapshot(this.refs[refName], this.state.value)
             .then(res => this.setState({
                 error: null,
@@ -86,38 +198,63 @@ export default class EditorScene extends Component {
                 },
             }, () => {
                 CameraRoll.saveToCameraRoll(this.state.previewSource.uri, 'photo')
-                    .then((result) => {
-                        if (showAlert == true)
+                .then((result) => {
+                    //Push use time count to server
+                    checkInternet(data => {
+                        if (data)
                         {
-                            Alert.alert(
-                                'HCMUS Avatar',
-                                'Lưu vào thư viện ảnh thành công!',
-                                [{ text: 'OK', onPress: () => Actions.pop()} ]
-                            );
+                            fetch(GLOBAL.FATHERLINK + '/users/updatenum', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    id: GLOBAL.OVERLAYID
+                                })
+                            })
                         }
-                        this.setState({ imgPath: result })
-                     })
-                    .catch((e) =>
+                    })
+
+                    if (showAlert == true)
+                    {
                         Alert.alert(
                             'HCMUS Avatar',
-                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau',
-                            [{ text: 'OK' }]
-                        ) 
+                            'Lưu vào thư viện ảnh thành công!',
+                            [{ text: 'OK', onPress: () => Actions.pop()} ]
+                        );
+                    }
+                    this.setState({ imgPath: result });
+                    //Callback
+                    callback(true);
+                    })
+                .catch((e) => {
+                    Alert.alert(
+                        'HCMUS Avatar',
+                        'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau',
+                        [{ text: 'OK' }]
                     );
+                    callback(false);
+                } 
+                );
             }))
             .catch(error => {
                 Alert.alert(
                             'HCMUS Avatar',
-                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau',
+                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau (Snapshot)',
                             [{ text: 'OK' }]
                         );  
-                this.setState({ error, res: null, previewSource: null }) 
+                this.setState({ error, res: null, previewSource: null });
+                callback(false);
             });
     }
 
     //Save to device
     cmdSaveToDevice() {
-        this.snapshot("newPict", true);
+        this.snapshot("newPict", true, (data) => {
+            if (data)
+                console.log('Save success')
+            else console.log('Save failed');
+        });
     }
 
     //Rotate right
@@ -127,29 +264,27 @@ export default class EditorScene extends Component {
         else this.setState({ rotateAngle: this.state.rotateAngle + 90 });
     }
 
-    getSavePath(oID)
-    {
-        switch (oID) 
-        {
-            case 1:
-                p = require('../images/overlay_1.png');
-                break;
-            case 2:
-                p = require('../images/overlay_2.png');
-                break;
-            case 3:
-                p = require('../images/overlay_3.png');
-                break;
-            case 4:
-                p = require('../images/overlay_4.png');
-                break;
-        }
-        return(p);
-    }
-
+    //Revert all changes
     cmdReset()
     {
-        Actions.newEditor({ data:this.props.data });
+        if (GLOBAL.CURRENTEDITOR == 1)
+        {
+            GLOBAL.CURRENTEDITOR = 2;
+            Actions.newEditor2({ data: this.props.data });
+        }
+        else 
+        {
+            GLOBAL.CURRENTEDITOR = 1;
+            Actions.newEditor1({ data: this.props.data });
+        }
+    }
+
+    openProgress() {
+        this.refs.progressDialog.open();
+    }
+
+    closeProgress() {
+        this.refs.progressDialog.close();
     }
 
     //Render profile picture
@@ -171,12 +306,24 @@ export default class EditorScene extends Component {
                     style={{ width: this.state.imageSize, height: this.state.imageSize, transform: [{ rotate: this.state.rotateAngle + ' deg' }] }} />
 
                 <Image 
-                    source={this.getSavePath(overlayID)} 
+                    source={{ uri: `file://${RNFS.DocumentDirectoryPath}/hcmusavatar_${overlayID}.png` }} 
                     style={{top: 0, left: 0, position: 'absolute', opacity: this.state.overlayOpacity, width: this.state.overlaySize, height: this.state.overlaySize}}
                     imageSize='contain'/>
 
             </View>
         )
+    }
+
+    //Cover view to prevent user from editting when done
+    renderProtectedView() 
+    {
+        if (!this.state.show)
+            return(null)
+        else
+            return(
+                <View style={{ width: this.state.imageSize, height: this.state.imageSize, 
+                            position: 'absolute', top: 50, left: 0, backgroundColor: 'transparent' }} />
+            )
     }
 
     //Quick function render the buttons
@@ -237,7 +384,7 @@ export default class EditorScene extends Component {
 
                         <Text>Độ trong suốt       </Text>
                         <Slider
-                            value={7}
+                            value={10}
                             minimumValue={1}
                             maximumValue={10}
                             trackStyle={style = {
@@ -317,14 +464,53 @@ export default class EditorScene extends Component {
                         />
 
                         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flex: 1 }} >
-                            { this.renderBigButton(require('../images/btnSaveToDevice.png'), st / 5, st / 5, 'Lưu vào\nthư viện', () => this.cmdSaveToDevice(), 'fadeIn') }
-                            { this.renderBigButton(require('../images/btnEdit.png'), st / 5, st / 5, 'Quay lại\nchỉnh sửa', () => this.toggleShow(), 'fadeIn') }
+
+                            {/* Uplaod to Facebook button */}
+                            <TouchableHighlight style={{flex: 1}} onPress={() => this.cmdSharePict()} underlayColor='#F2F2F2'>
+                                <View
+                                    animation={'fadeIn'} duration={350}
+                                    style={{alignItems:'center', justifyContent: 'center', padding: 10}}>
+
+                                    <Image
+                                        source={this.state.uploadImage}
+                                        style={{width: st / 5, height: st / 5}}
+                                        resizeMode='stretch'
+                                    />
+
+                                    <Text style={{marginTop: 5, textAlign: 'center'}}>{this.state.uploadText}</Text>
+                                </View>
+                            </TouchableHighlight>
+
+                            { this.renderBigButton(require('../images/btnSaveToDevice.png'), st / 5, st / 5, 'Lưu vào thư viện', () => this.cmdSaveToDevice(), 'fadeIn', 0) }
                         </View>
                     </View>
 
                     
                 </View>
             )
+    }
+
+    renderEditButton() 
+    {
+        if (this.state.show)
+        {
+            return(
+                 <TouchableHighlight
+                    onPress={() => this.toggleShow() }
+                    style={{position: 'absolute', top: 0, right: 0, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'}}
+                    underlayColor={GLOBAL.STATUS_COLOR}>
+                    <Image
+                        source={require('../images/bar_edit.png')}
+                        style={{width: 35, height: 35}}
+                        resizeMode='center'/>
+
+                </TouchableHighlight>
+            )
+        }
+        else 
+        {
+            return(null)
+        }
     }
 
     //Main render function
@@ -345,12 +531,7 @@ export default class EditorScene extends Component {
                 </View>
                 
                 <TouchableHighlight
-                    onPress={() => {
-                        if (this.state.isUploading == false)
-                            Actions.pop();
-                        else
-                            Alert.alert("HCMUS Avatar", "Ảnh hiện đang trong quá trình tải lên, vui lòng chờ quá trình này hoàn tất")
-                    }}
+                    onPress={() => this.backButtonPressed()}
                     style={{position: 'absolute', top: 0, left: 0, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'}}
                     underlayColor={GLOBAL.STATUS_COLOR}>
                     <Image
@@ -358,12 +539,18 @@ export default class EditorScene extends Component {
                         style={{width: 35, height: 35}}/>
                 </TouchableHighlight>
 
+               { this.renderEditButton() }
+
                 <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
                     { this.renderProfilePict() }
                     { this.renderToolEditor() }
                 </View>
 
                 <PopupSelection ref='modal3' onEditor={true}/>
+
+                <LoadingModal ref='progressDialog' loadingText='Đang tải ảnh đại diện Facebook...'/>
+
+                { this.renderProtectedView() }
             </View>
         );
     }

@@ -3,6 +3,7 @@ package com.piksalstudio.hcmus.avatar;
 import android.app.Application;
 import android.util.Log;
 
+import com.burnweb.rnpermissions.RNPermissionsPackage;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.react.ReactApplication;
 import com.facebook.reactnative.androidsdk.FBSDKPackage;
@@ -18,6 +19,7 @@ import com.RNFetchBlob.RNFetchBlobPackage;
 import com.reactnative.ivpusic.imagepicker.PickerPackage;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.reactnative.photoview.PhotoViewPackage;
+import com.rnfs.RNFSPackage;
 
 
 import java.util.Arrays;
@@ -49,7 +51,9 @@ public class MainApplication extends Application implements ReactApplication
                     new RNViewShotPackage(),
                     new RNFetchBlobPackage(),
                     new PickerPackage(),
-                    new PhotoViewPackage()
+                    new PhotoViewPackage(),
+                    new RNPermissionsPackage(),
+                    new RNFSPackage()
             );
         }
     };

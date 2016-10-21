@@ -4,7 +4,11 @@ module.exports = {
   TOKEN: null,
   OVERLAYID: null,
   MAINCOMPONENT: null,
+  EDITORCOMPONENT: null,
   ONEDITOR: false,
+  CURRENTEDITOR: 1,
+
+  FATHERLINK: 'https://hcmus-avatar-piksaldevone.c9users.io',
 
   mainCallback()
   {
