@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, ActivityIndicator, Dimensions, Platform } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker'
 import Modal from 'react-native-modalbox';
 
@@ -21,6 +21,11 @@ export default class LoadingModal extends Component {
     //Render Progress Dialog
     render()
     {
+        var loaderSize;
+        if (Platform.OS == 'ios')
+            loaderSize = 'large'
+        else loaderSize = 50;
+        //
         let st = Dimensions.get('window').width;
         return(
             <Modal {...this.props}
@@ -36,7 +41,7 @@ export default class LoadingModal extends Component {
                 <ActivityIndicator
                     animating={true}
                     style={{width: 100, height: 100}}
-                    size={50}
+                    size={loaderSize}
                 />
 
                 <Text style={{fontSize: 15, width: st - 200 - 10}}>{this.props.loadingText}</Text>

@@ -230,7 +230,7 @@ export default class EditorScene extends Component {
                 .catch((e) => {
                     Alert.alert(
                         'HCMUS Avatar',
-                        'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau',
+                        'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n(Error Code: CameraRoll)',
                         [{ text: 'OK' }]
                     );
                     callback(false);
@@ -240,7 +240,7 @@ export default class EditorScene extends Component {
             .catch(error => {
                 Alert.alert(
                             'HCMUS Avatar',
-                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau (Snapshot)',
+                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n(Error Code: ViewShot)',
                             [{ text: 'OK' }]
                         );  
                 this.setState({ error, res: null, previewSource: null });
@@ -261,7 +261,7 @@ export default class EditorScene extends Component {
     cmdRotateRight() {
         if (this.state.rotateAngle == 315)
             this.setState({ rotateAngle: 0 });
-        else this.setState({ rotateAngle: this.state.rotateAngle + 45 });
+        else this.setState({ rotateAngle: this.state.rotateAngle + 90 });
     }
 
     //Revert all changes

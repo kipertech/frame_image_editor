@@ -8,7 +8,7 @@ module.exports = {
   ONEDITOR: false,
   CURRENTEDITOR: 1,
 
-  FATHERLINK: 'https://hcmus-avatar-piksaldevone.c9users.io',
+  FATHERLINK: 'http://128.199.226.4:8000',
 
   mainCallback()
   {

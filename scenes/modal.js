@@ -6,7 +6,7 @@ import {
     ScrollView,
     Image,
     TouchableOpacity,
-    TouchableHighLight,
+    TouchableHighlight,
     NativeModules,
     Dimensions,
     AppRegistry,
@@ -111,11 +111,12 @@ export default class PopUpSelection extends Component {
                 />
 
                 {/* From Facebook */}
-                <TouchableHighLight
-                    underlayColor='#F2F2F2' 
+                <TouchableHighlight 
                     onPress={() => { 
-                    this.refs.mainModal.close(); 
-                    this.checkOnEditor();
+                    this.refs.mainModal.close();
+
+                    { this.checkOnEditor(); }
+
                     if (GLOBAL.TOKEN == null)
                         alertLogin(false);
                     else 
@@ -128,24 +129,28 @@ export default class PopUpSelection extends Component {
                             if (GLOBAL.EDITORCOMPONENT != null)
                                 GLOBAL.EDITORCOMPONENT.closeProgress();
                         });
-                }}>
+                    }} 
+                    underlayColor='#F2F2F2'>
+
                     <View flexDirection='row' style={[styles.selectionItem]}>
                         <Image
                             source={require('../images/selection_FB.png')}
-                            style={[styles.selectionImage]}
-                            resizeMode='center'
+                            style={{marginRight: 15, marginLeft: 6, height: 21, width: 14}} 
+                            resizeMode='stretch'
                         />
                         <Text style={[styles.selectionText]}>Ảnh đại diện Facebook</Text>
                     </View>
-                </TouchableHighLight>
+
+                </TouchableHighlight>
 
                 {/* Divider */}
                 <View style={{ height: 1, backgroundColor: 'gray', opacity: 0.2 }} />
 
                 {/* From Gallery */}
-                <TouchableHighLight
-                    underlayColor='#F2F2F2' 
-                    onPress={() => { this.refs.mainModal.close(); this.pickSingle(); } }>
+                <TouchableHighlight 
+                    onPress={() => { this.refs.mainModal.close(); this.pickSingle();}} 
+                    underlayColor='#F2F2F2'>
+
                     <View flexDirection='row' style={[styles.selectionItem]}>
                         <Image
                             source={require('../images/selection_gallery.png')}
@@ -154,15 +159,17 @@ export default class PopUpSelection extends Component {
                         />
                         <Text style={[styles.selectionText]}>Thư viện</Text>
                     </View>
-                </TouchableHighLight>
+
+                </TouchableHighlight>
 
                 {/* Divider */}
                 <View style={{ height: 1, backgroundColor: 'gray', opacity: 0.2 }} />
 
                 {/* From Camera */}
-                <TouchableHighLight
-                    underlayColor='#F2F2F2' 
-                    onPress={() => { this.refs.mainModal.close(); this.pickSingleWithCamera(); } }>
+                <TouchableHighlight 
+                    onPress={() => { this.refs.mainModal.close(); this.pickSingleWithCamera(); }} 
+                    underlayColor='#F2F2F2'>
+
                     <View flexDirection='row' style={[styles.selectionItem]}>
                         <Image
                             source={require('../images/selection_camera.png')}
@@ -171,7 +178,8 @@ export default class PopUpSelection extends Component {
                          />
                         <Text style={[styles.selectionText]}>Chụp hình</Text>
                     </View>
-                </TouchableHighLight>
+
+                </TouchableHighlight>
             </Modal>
         );
     }

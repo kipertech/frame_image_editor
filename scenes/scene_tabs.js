@@ -10,8 +10,8 @@ import ReactNative, {
     Alert,
     ListView,
     ActivityIndicator,
-    RefreshControl,
-    Platform
+    Platform,
+    NetInfo
 } from 'react-native';
 
 import Menu, {
@@ -207,7 +207,7 @@ export class TabScene extends Component
                             'Đăng nhập tài khoản Facebook thành công!',
                             [{ text: 'OK' }]
                         );
-                    }
+                    };
                 });
         }
         else
@@ -240,6 +240,8 @@ export class TabScene extends Component
             'Developed and sponsored by Piksal Studio, 2016',
             [{ text: 'OK' }]
         )
+
+        AccessToken.getCurrentAccessToken().then((data) => { alert(data); })
     }
 
     //Main render function
@@ -428,10 +430,6 @@ export class TabScene extends Component
         {
             return(
                 <ScrollView ref={(ref) => this.mainList_list = ref}>
-                    <RefreshControl
-                        refreshing={this.state.refreshing}
-                        onRefresh={() => {this.checkConnection(); this.fetchImageData()}}
-                    />
                     {this.state.fetchData.map((item, index) => this.renderCard(item, index))}
                 </ScrollView>
             );
@@ -441,8 +439,8 @@ export class TabScene extends Component
             return(
                 <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
                     <TouchableOpacity onPress={() => {
-                        this.checkConnection();
-                        this.fetchImageData();
+                        { this.checkConnection(); }
+                        { this.fetchImageData(); }
                     }}>
                         <Image
                             source={require('../images/notification_notconnected.png')}

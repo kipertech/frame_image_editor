@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactNative, { NetInfo } from 'react-native';
 import { Router, Scene } from 'react-native-router-flux';
 
 import WelcomeScene from './scenes/scene_welcome';
@@ -8,6 +9,10 @@ import LoadingScene from './scenes/scene_loading';
 
 class Main extends Component
 {
+    componentDidMount() {
+        NetInfo.isConnected.addEventListener('change', () => undefined);
+    }
+    
     render() {
         return(
             <Router>
