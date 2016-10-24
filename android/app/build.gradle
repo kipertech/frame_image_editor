@@ -89,8 +89,8 @@ android {
     defaultConfig {
         applicationId "com.piksalstudio.hcmus.avatar"
         minSdkVersion 16
-        targetSdkVersion 23
-        versionCode 1
+        targetSdkVersion 24
+        versionCode 5
         versionName "1.0"
         ndk {
             abiFilters "armeabi-v7a", "x86"

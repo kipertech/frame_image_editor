@@ -261,7 +261,7 @@ export default class EditorScene extends Component {
     cmdRotateRight() {
         if (this.state.rotateAngle == 315)
             this.setState({ rotateAngle: 0 });
-        else this.setState({ rotateAngle: this.state.rotateAngle + 90 });
+        else this.setState({ rotateAngle: this.state.rotateAngle + 45 });
     }
 
     //Revert all changes
