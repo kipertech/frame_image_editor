@@ -281,8 +281,8 @@ export class TabScene extends Component
                                 style={{ width: st / 5, height: st / 5, borderRadius: this.state.pictBorder }}
                                 resizeMode={this.state.pictResize} />
 
-                            <Text style={{ fontWeight: 'bold', marginTop: 5, color: 'white' }}>{this.state.userName}</Text>
-                            <Text style={{ color: 'white' }}>{this.state.userID}</Text>
+                            <Text style={{ fontWeight: 'bold', marginTop: 5, color: 'white', backgroundColor: 'transparent' }}>{this.state.userName}</Text>
+                            <Text style={{ color: 'white', backgroundColor: 'transparent' }}>{this.state.userID}</Text>
                         </View>
 
                         {/* Button area */}
@@ -395,12 +395,11 @@ export class TabScene extends Component
                     />
 
                 {/* Action bar */}
-                <View style={{ backgroundColor: GLOBAL.BAR_COLOR, height: 50, padding: 5, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
+                <View style={{ backgroundColor: GLOBAL.BAR_COLOR, height: 50, padding: 5, alignItems: 'center', justifyContent: 'center'}}>
                     <Image
                         source={require('../images/title.png')}
                         style={{ width: 140, height: 15 }}
                         resizeMode='stretch' />
-
                 </View>
                 
                 {/* Navigation Drawer button */}
