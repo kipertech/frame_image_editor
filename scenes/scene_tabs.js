@@ -10,8 +10,8 @@ import ReactNative, {
     Alert,
     ListView,
     ActivityIndicator,
-    BackAndroid,
-    RefreshControl
+    RefreshControl,
+    Platform
 } from 'react-native';
 
 import Menu, {
@@ -87,32 +87,34 @@ export class TabScene extends Component
     }
 
     componentDidMount() {
-        //Get read storage permission
-        checkPermission("android.permission.READ_EXTERNAL_STORAGE")
-        .then((result) => 
-            console.log("Already granted Read Storage!", result)
-            , (result) => {
-                requestPermission("android.permission.READ_EXTERNAL_STORAGE")
-                .then((result) => {
-                    console.log("Granted Read Storage!", result);    
-                }, (result) => {
-                    console.log("Not Granted Read Storage!");
+        if (Platform.OS == 'android')
+        {
+            //Get read storage permission
+            checkPermission("android.permission.READ_EXTERNAL_STORAGE")
+            .then((result) => 
+                console.log("Already granted Read Storage!", result)
+                , (result) => {
+                    requestPermission("android.permission.READ_EXTERNAL_STORAGE")
+                    .then((result) => {
+                        console.log("Granted Read Storage!", result);    
+                    }, (result) => {
+                        console.log("Not Granted Read Storage!");
+                    });
                 });
-            });
 
-        //Get write storage permission
-        checkPermission("android.permission.WRITE_EXTERNAL_STORAGE")
-        .then((result) => 
-            console.log("Already granted Write Storage!", result)
-            , (result) => {
-                requestPermission("android.permission.WRITE_EXTERNAL_STORAGE")
-                .then((result) => {
-                    console.log("Granted Write Storage!", result);    
-                }, (result) => {
-                    console.log("Not Granted Write Storage!");
+            //Get write storage permission
+            checkPermission("android.permission.WRITE_EXTERNAL_STORAGE")
+            .then((result) => 
+                console.log("Already granted Write Storage!", result)
+                , (result) => {
+                    requestPermission("android.permission.WRITE_EXTERNAL_STORAGE")
+                    .then((result) => {
+                        console.log("Granted Write Storage!", result);    
+                    }, (result) => {
+                        console.log("Not Granted Write Storage!");
+                    });
                 });
-            });
-
+        }
         this.fetchImageData();
     }
 
