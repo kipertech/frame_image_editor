@@ -33,6 +33,10 @@ class LoadingScene extends Component
         this.showWelcome();
     }
 
+    componentDidMount() {
+        StatusBar.setHidden(true);
+    }
+
     render() {
         let st = Dimensions.get('window').width, stHeight = Dimensions.get('window').height;
         return(

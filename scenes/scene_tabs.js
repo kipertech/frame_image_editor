@@ -116,6 +116,7 @@ export class TabScene extends Component
                 });
         }
         this.fetchImageData();
+        StatusBar.setHidden(false);
     }
 
     //Fetch image JSON from server
@@ -165,12 +166,13 @@ export class TabScene extends Component
     //Update Facebook info to drawer
     checkFacebook(isAvailable) 
     {
+        let st = Dimensions.get('window').width;
         if (isAvailable == true) 
         {
             this.setState(
                 {
                     pictUrl: require('../images/stormtrooper.jpg'),
-                    pictBorder: 100,
+                    pictBorder: (st / 5) / 2,
                     userName: 'Facebook User',
                     userID: 'ID: Unknown',
                     facebookIcon: require('../images/drawer_logout.png'),
@@ -240,8 +242,6 @@ export class TabScene extends Component
             'Developed and sponsored by Piksal Studio, 2016',
             [{ text: 'OK' }]
         )
-
-        AccessToken.getCurrentAccessToken().then((data) => { alert(data); })
     }
 
     //Main render function
@@ -269,7 +269,7 @@ export class TabScene extends Component
                         <View style={{
                             position: 'absolute', left: 0, top: 0, right: 0,
                             justifyContent: 'center', alignItems: 'center',
-                            height: 170, backgroundColor: GLOBAL.BAR_COLOR
+                            height: st * 0.8 * 0.6, backgroundColor: GLOBAL.BAR_COLOR
                         }}>
                             <Image
                                 source={require('../images/drawer_cover.png')}
@@ -286,7 +286,7 @@ export class TabScene extends Component
                         </View>
 
                         {/* Button area */}
-                        <View style={{ position: 'absolute', top: 170, left: 0, right: 0, bottom: 0, margin: 15 }}>
+                        <View style={{ position: 'absolute', top: st * 0.8 * 0.6, left: 0, right: 0, bottom: 0, margin: 15 }}>
 
                             <TouchableOpacity onPress={() => this.handleLoginButton()}>
                                 <View style={{ marginTop: 5, flexDirection: 'row', alignItems: 'center' }}>
@@ -387,15 +387,12 @@ export class TabScene extends Component
 
     //Render the tabs
     renderActionBar() {
+        let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         return (
-            <View style={{ flex: 1, backgroundColor: 'white' }} >
-                <StatusBar
-                    backgroundColor={GLOBAL.STATUS_COLOR}
-                    barStyle="light-content"
-                    />
+            <View style={{ flex: 1, backgroundColor: GLOBAL.STATUS_COLOR }} >
 
                 {/* Action bar */}
-                <View style={{ backgroundColor: GLOBAL.BAR_COLOR, height: 50, padding: 5, alignItems: 'center', justifyContent: 'center'}}>
+                <View style={{ backgroundColor: GLOBAL.BAR_COLOR, height: 50, marginTop: barHeight, padding: 5, alignItems: 'center', justifyContent: 'center'}}>
                     <Image
                         source={require('../images/title.png')}
                         style={{ width: 140, height: 15 }}
@@ -405,7 +402,7 @@ export class TabScene extends Component
                 {/* Navigation Drawer button */}
                 <TouchableHighlight
                     onPress={() => this.drawer.open()}
-                    style={{ position: 'absolute', top: 0, left: 0, height: 50, width: 50, justifyContent: 'center', alignItems: 'center' }}
+                    style={{ position: 'absolute', top: barHeight, left: 0, height: 50, width: 50, justifyContent: 'center', alignItems: 'center' }}
                     underlayColor={GLOBAL.STATUS_COLOR}>
                     <Image
                         source={require('../images/icon_menu_main.png')}

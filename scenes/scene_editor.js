@@ -11,7 +11,8 @@ import {
     Dimensions, 
     StatusBar,
     ActivityIndicator,
-    BackAndroid
+    BackAndroid,
+    Platform
   } from 'react-native';
 import { LoginButton, AccessToken, LoginManager, GraphRequestManager, GraphRequest } from 'react-native-fbsdk';
 import { takeSnapshot } from 'react-native-view-shot';
@@ -87,6 +88,10 @@ export default class EditorScene extends Component {
         }
         else
             Alert.alert("HCMUS Avatar", "Ảnh hiện đang trong quá trình tải lên, vui lòng chờ quá trình này hoàn tất")
+    }
+
+    componentDidMount() {
+        StatusBar.setHidden(false);
     }
 
     /*
@@ -230,7 +235,7 @@ export default class EditorScene extends Component {
                 .catch((e) => {
                     Alert.alert(
                         'HCMUS Avatar',
-                        'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n(Error Code: CameraRoll)',
+                        'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n\n(Error Code: CameraRoll)',
                         [{ text: 'OK' }]
                     );
                     callback(false);
@@ -240,7 +245,7 @@ export default class EditorScene extends Component {
             .catch(error => {
                 Alert.alert(
                             'HCMUS Avatar',
-                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n(Error Code: ViewShot)',
+                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n\n(Error Code: ViewShot)',
                             [{ text: 'OK' }]
                         );  
                 this.setState({ error, res: null, previewSource: null });
@@ -376,7 +381,7 @@ export default class EditorScene extends Component {
         if (this.state.show == false) 
         {
             return (
-                <View style={{ padding: 15, width: st, flex: 1, justifyContent: 'center' }}>
+                <View style={{ padding: 15, width: st, flex: 1, justifyContent: 'center', backgroundColor: 'white' }}>
 
                     <View
                         animation='fadeIn' duration={350} 
@@ -454,7 +459,7 @@ export default class EditorScene extends Component {
             return (
                 <View
                     
-                    style={{ padding: 15, width: st, flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    style={{ padding: 15, width: st, flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' }}>
 
                     <View style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
                         <Image
@@ -492,17 +497,18 @@ export default class EditorScene extends Component {
 
     renderEditButton() 
     {
+        let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         if (this.state.show)
         {
             return(
                  <TouchableHighlight
                     onPress={() => this.toggleShow() }
-                    style={{position: 'absolute', top: 0, right: 0, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'}}
+                    style={{position: 'absolute', top: barHeight, right: 0, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'}}
                     underlayColor={GLOBAL.STATUS_COLOR}>
                     <Image
                         source={require('../images/bar_edit.png')}
-                        style={{width: 35, height: 35}}
-                        resizeMode='center'/>
+                        style={{width: 25, height: 25}}
+                        resizeMode='stretch'/>
 
                 </TouchableHighlight>
             )
@@ -515,6 +521,7 @@ export default class EditorScene extends Component {
 
     //Main render function
     render() {    
+        let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         return (
             <View style={[styles.container]}>
                 <StatusBar
@@ -522,7 +529,8 @@ export default class EditorScene extends Component {
                     barStyle="light-content"
                 />
 
-                <View style={{backgroundColor: GLOBAL.BAR_COLOR, height: 50, width: Dimensions.get('window').width, padding: 5, alignItems: 'center', justifyContent: 'center', flexDirection: 'row'}}>
+                {/* Action Bar */}
+                <View style={{backgroundColor: GLOBAL.BAR_COLOR, marginTop: barHeight, height: 50, width: Dimensions.get('window').width, padding: 5, alignItems: 'center', justifyContent: 'center', flexDirection: 'row'}}>
                     <Image
                         source={require('../images/title.png')}
                         style={{width: 140, height: 15}}
@@ -530,9 +538,10 @@ export default class EditorScene extends Component {
 
                 </View>
                 
+                {/* Back button */}
                 <TouchableHighlight
                     onPress={() => this.backButtonPressed()}
-                    style={{position: 'absolute', top: 0, left: 0, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'}}
+                    style={{position: 'absolute', top: barHeight, left: 0, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'}}
                     underlayColor={GLOBAL.STATUS_COLOR}>
                     <Image
                         source={require('../images/bar_back.png')}
@@ -559,7 +568,7 @@ export default class EditorScene extends Component {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: GLOBAL.STATUS_COLOR,
     },
 
     button: {

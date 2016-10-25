@@ -4,13 +4,14 @@ import { Actions } from 'react-native-router-flux'
 
 class WelcomeScene extends Component
 {
+    componentDidMount() {
+        StatusBar.setHidden(true);
+    }
+
     render() {
         let st = Dimensions.get('window').width, stHeight = Dimensions.get('window').height;
         return(
             <View style={[styles.container]}>
-                <StatusBar
-                    hidden={true}
-                />
 
                 <TouchableOpacity onPress={() => Actions.tabs()}>
                     <Image
