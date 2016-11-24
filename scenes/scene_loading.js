@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Image, TouchableHighlight, StatusBar, Dimensions } from 'react-native';
+import { StyleSheet, View, Image, StatusBar, Dimensions } from 'react-native';
 import { Actions } from 'react-native-router-flux'
-const timer = require('react-native-timer');
 
-
-class LoadingScene extends Component
+export default class LoadingScene extends Component
 {
     constructor(props) {
         super(props);
@@ -15,9 +13,7 @@ class LoadingScene extends Component
 
     showWelcome()
     {
-        timer.setTimeout(
-            this,
-            'ShowWelcome',
+        setTimeout(
             () => {
                 if (this.state.isLoaded == false)
                 {
@@ -25,7 +21,7 @@ class LoadingScene extends Component
                     Actions.welcome();
                 }
             },
-            2000
+            1000
         )
     }
 
@@ -64,5 +60,3 @@ const styles = StyleSheet.create({
   }
 
 });
-
-module.exports = LoadingScene;

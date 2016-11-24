@@ -15,5 +15,7 @@ module.exports = {
     if (this.TOKEN != null)
       this.MAINCOMPONENT.checkFacebook(true);
     else this.MAINCOMPONENT.checkFacebook(false);
-  }
+  },
+
+  DATA: []
 };

@@ -6,47 +6,32 @@ import ReactNative, {
     TouchableHighlight,
     StatusBar,
     Dimensions,
-    AsyncStorage,
     Alert,
-    ListView,
-    ActivityIndicator,
     Platform,
-    NetInfo
 } from 'react-native';
 
-import Menu, {
-    MenuContext,
-    MenuOptions,
-    MenuOption,
-    MenuTrigger,
-    renderers
-} from 'react-native-popup-menu';
 import {
-    alertLogin,
     loginFb,
     checkLoggedIn,
     checkInternet,
-    getProfileImageURL,
     getProfileImageURL2
-} from './login';
-import Button from 'react-native-button';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { AccessToken, LoginManager } from 'react-native-fbsdk';
+} from '../components/features_FB';
+
+import { LoginManager } from 'react-native-fbsdk';
 import { createAnimatableComponent, View } from 'react-native-animatable';
-import { Actions } from 'react-native-router-flux';
 import Drawer from 'react-native-drawer';
-import PopUpSelection from './modal';
-import LoadingModal from './loadingModal';
+import PopUpSelection from '../components/modal';
+import LoadingModal from '../components/loadingModal';
 import {checkPermission, requestPermission} from 'react-native-android-permissions';
 import RNFS from 'react-native-fs';
 import moment from 'moment';
 
-GLOBAL = require('./global');
+GLOBAL = require('../components/global');
 
 const ScrollView = createAnimatableComponent(ReactNative.ScrollView);
 const Image = createAnimatableComponent(ReactNative.Image);
 
-export class TabScene extends Component 
+export default class ListScene extends Component
 {
     constructor(props) {
         super(props);
@@ -58,7 +43,7 @@ export class TabScene extends Component
             pictUrl: require('../images/logo_khtn_small.png'),
             pictBorder: 0,
             userName: 'HCMUS Avatar',
-            userID: 'http://hcmus.edu.vn/',
+            userID: 'http://wwww.hcmus.edu.vn/',
             facebookIcon: require('../images/drawer_facebook.png'),
             facebookText: 'Đăng nhập Facebook',
             pictResize: 'center',
@@ -71,7 +56,6 @@ export class TabScene extends Component
             //Server
             fetchData: [],
             isConnected: false,
-            refreshing: false,
         };
     }
 
@@ -91,29 +75,29 @@ export class TabScene extends Component
         {
             //Get read storage permission
             checkPermission("android.permission.READ_EXTERNAL_STORAGE")
-            .then((result) => 
-                console.log("Already granted Read Storage!", result)
-                , (result) => {
-                    requestPermission("android.permission.READ_EXTERNAL_STORAGE")
-                    .then((result) => {
-                        console.log("Granted Read Storage!", result);    
-                    }, (result) => {
-                        console.log("Not Granted Read Storage!");
+                .then((result) =>
+                        console.log("Already granted Read Storage!", result)
+                    , (result) => {
+                        requestPermission("android.permission.READ_EXTERNAL_STORAGE")
+                            .then((result) => {
+                                console.log("Granted Read Storage!", result);
+                            }, (result) => {
+                                console.log("Not Granted Read Storage!");
+                            });
                     });
-                });
 
             //Get write storage permission
             checkPermission("android.permission.WRITE_EXTERNAL_STORAGE")
-            .then((result) => 
-                console.log("Already granted Write Storage!", result)
-                , (result) => {
-                    requestPermission("android.permission.WRITE_EXTERNAL_STORAGE")
-                    .then((result) => {
-                        console.log("Granted Write Storage!", result);    
-                    }, (result) => {
-                        console.log("Not Granted Write Storage!");
+                .then((result) =>
+                        console.log("Already granted Write Storage!", result)
+                    , (result) => {
+                        requestPermission("android.permission.WRITE_EXTERNAL_STORAGE")
+                            .then((result) => {
+                                console.log("Granted Write Storage!", result);
+                            }, (result) => {
+                                console.log("Not Granted Write Storage!");
+                            });
                     });
-                });
         }
         this.fetchImageData();
         StatusBar.setHidden(false);
@@ -125,16 +109,14 @@ export class TabScene extends Component
         checkInternet(data => {
             if (data)
             {
-                this.refs.progressFetch.open();
-                this.setState({refreshing: true});
+                this.fetchingProgress.open();
                 fetch(GLOBAL.FATHERLINK + '/users/getimages')
-                .then((response) => response.json())
-                .then((responseJson) => {
-                    this.setState({ fetchData: responseJson });
-                    responseJson.reverse().forEach((item, index) => { this.downloadImage(item, index) });
-                    this.refs.progressFetch.close();
-                    this.setState({refreshing: false});
-                })
+                    .then((response) => response.json())
+                    .then((responseJson) => {
+                        this.setState({ fetchData: responseJson.reverse() });
+                        this.state.fetchData.forEach((item, index) => { this.downloadImage(item, index) });
+                        this.fetchingProgress.close();
+                    })
             }
         })
     }
@@ -146,7 +128,7 @@ export class TabScene extends Component
         checkInternet((data) => {
             if (data)
                 this.setState({isConnected: true})
-            else 
+            else
                 this.setState({isConnected: false});
             check = data;
         })
@@ -154,20 +136,20 @@ export class TabScene extends Component
     }
 
     //Download image data from server
-    downloadImage(item, index) 
+    downloadImage(item, index)
     {
         RNFS.downloadFile({
             fromUrl: GLOBAL.FATHERLINK + `${item.url_avatar}`,
             toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`,
         }).promise
             .then((result) => { console.log(result) }).done();
-     }
+    }
 
     //Update Facebook info to drawer
-    checkFacebook(isAvailable) 
+    checkFacebook(isAvailable)
     {
         let st = Dimensions.get('window').width;
-        if (isAvailable == true) 
+        if (isAvailable == true)
         {
             this.setState(
                 {
@@ -181,14 +163,14 @@ export class TabScene extends Component
                 });
             getProfileImageURL2((data, data2, data3) => { this.setState({ pictUrl: { uri: data }, userName: data2, userID: 'ID: ' + data3 }) })
         }
-        else 
+        else
         {
             this.setState(
                 {
                     pictUrl: require('../images/logo_khtn_small.png'),
                     pictBorder: 0,
                     userName: 'HCMUS Avatar',
-                    userID: 'http://hcmus.edu.vn/',
+                    userID: 'http://www.hcmus.edu.vn/',
                     facebookIcon: require('../images/drawer_facebook.png'),
                     facebookText: 'Đăng nhập Facebook',
                     pictResize: 'contain'
@@ -198,11 +180,11 @@ export class TabScene extends Component
 
     //Log in to Facebook
     handleLoginButton() {
-        if (this.state.facebookText != 'Đăng xuất') 
+        if (this.state.facebookText != 'Đăng xuất')
         {
-            loginFb(true, 
+            loginFb(true,
                 (data) => {
-                    if (data != false) 
+                    if (data != false)
                     {
                         Alert.alert(
                             'HCMUS Avatar',
@@ -311,31 +293,30 @@ export class TabScene extends Component
                         </View>
                     </View>
                 }
-                >
-            
-                {this.renderActionBar()}
+            >
+
+            {this.renderActionBar()}
 
             </Drawer>
         )
     }
 
     openProgress() {
-        this.refs.progressDialog.open();
+        this.facebookProgress.open();
     }
 
     closeProgress() {
-        this.refs.progressDialog.close();
+        this.facebookProgress.close();
     }
 
     //Render items in list
-    renderCard(item, index) {
+    renderCard(item, index)
+    {
         let newDate = moment(item.createdAt).format('DD-MM-YYYY')
         let st = Dimensions.get('window').width + 5;
         return (
             <TouchableOpacity key={index} onPress={() => this.openSelection(item._id)}>
-                <View
-                    style={{ flex: 1, backgroundColor: 'white' }}
-                    style={{ backgroundColor: 'white', height: st + 105, width: st }}>
+                <View style={{ backgroundColor: 'white', height: st + 105, width: st }}>
 
                     {/* Title area */}
                     <View style={{ width: st, height: 45, margin: 5, flexDirection: 'row', alignItems: 'center' }}>
@@ -398,7 +379,7 @@ export class TabScene extends Component
                         style={{ width: 140, height: 15 }}
                         resizeMode='stretch' />
                 </View>
-                
+
                 {/* Navigation Drawer button */}
                 <TouchableHighlight
                     onPress={() => this.drawer.open()}
@@ -414,29 +395,34 @@ export class TabScene extends Component
 
                 <PopUpSelection ref='mainModal' onEditor={false} />
 
-                <LoadingModal ref='progressDialog' loadingText='Đang tải ảnh đại diện Facebook...'/>
-                <LoadingModal ref='progressFetch' loadingText='Đang tải dữ liệu từ máy chủ, xin vui lòng đợi...'/>
+                <LoadingModal
+                    ref={(comp) => this.facebookProgress = comp}
+                    loadingText='Đang tải ảnh đại diện Facebook...'/>
+                <LoadingModal
+                    ref={(comp) => this.fetchingProgress = comp}
+                    loadingText='Đang tải dữ liệu từ máy chủ, xin vui lòng đợi...'/>
             </View>
         );
     }
 
-    renderList() 
+    //Render all items to list
+    renderList()
     {
         if (this.state.isConnected)
         {
             return(
-                <ScrollView ref={(ref) => this.mainList_list = ref}>
-                    {this.state.fetchData.map((item, index) => this.renderCard(item, index))}
+                <ScrollView ref={(comp) => this.mainList = comp} style={{ backgroundColor: 'white' }}>
+                    { this.state.fetchData.map((item, index) => this.renderCard(item, index)) }
                 </ScrollView>
             );
         }
         else
         {
             return(
-                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+                <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white'}}>
                     <TouchableOpacity onPress={() => {
-                        { this.checkConnection(); }
-                        { this.fetchImageData(); }
+                        { this.checkConnection() }
+                        { this.fetchImageData() }
                     }}>
                         <Image
                             source={require('../images/notification_notconnected.png')}
@@ -452,21 +438,3 @@ export class TabScene extends Component
     }
 }
 
-const styles = StyleSheet.create({
-    icon: {
-        width: 300,
-        height: 300,
-        alignSelf: 'center',
-    },
-
-    navBar: {
-        backgroundColor: '#fff',
-        borderColor: 'rgba(0,0,0,0.1)',
-        height: 40,
-        padding: 5,
-        elevation: 3,
-        alignItems: 'center'
-    }
-});
-
-module.exports = TabScene;

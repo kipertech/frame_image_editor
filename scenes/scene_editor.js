@@ -1,34 +1,31 @@
 import React, { Component } from 'react';
-import { 
-    StyleSheet, 
-    Text, 
-    Image, 
-    CameraRoll, 
-    TouchableHighlight, 
-    TouchableOpacity,
-    AsyncStorage, 
-    Alert, 
-    Dimensions, 
+import {
+    StyleSheet,
+    Text,
+    Image,
+    CameraRoll,
+    TouchableHighlight,
+    AsyncStorage,
+    Alert,
+    Dimensions,
     StatusBar,
-    ActivityIndicator,
-    BackAndroid,
-    Platform
-  } from 'react-native';
-import { LoginButton, AccessToken, LoginManager, GraphRequestManager, GraphRequest } from 'react-native-fbsdk';
+    Platform,
+    ScrollView
+} from 'react-native';
+
 import { takeSnapshot } from 'react-native-view-shot';
-import Button from 'react-native-button';
 import RNFetchBlob from 'react-native-fetch-blob';
 import {Actions} from 'react-native-router-flux';
-import PopupSelection from './modal';
-import LoadingModal from './loadingModal';
-import {alertLogin, loginFb, checkInternet, getPictURL, getFBImagePath} from './login';
-GLOBAL = require('./global');
-import TabScene from './scene_tabs';
 import PhotoView from 'react-native-photo-view';
-import { createAnimatableComponent, View } from 'react-native-animatable';
+import { View } from 'react-native-animatable';
 import Slider from 'react-native-slider';
 import RNFS from 'react-native-fs';
-const timer = require('react-native-timer');
+
+import PopupSelection from '../components/modal';
+import LoadingModal from '../components/loadingModal';
+import { alertLogin, checkInternet } from '../components/features_FB';
+
+GLOBAL = require('../components/global');
 
 export default class EditorScene extends Component {
     constructor(props) {
@@ -67,45 +64,31 @@ export default class EditorScene extends Component {
             show: !this.state.show
         });
     }
-    
-    componentWillMount() 
+
+    componentWillMount()
     {
         const self = this
         const value = AsyncStorage.getItem('fbtoken', (error, result) => {
-            if (result != null) 
+            if (result != null)
                 self.setState({ loginDisabled: true })
-            else self.setState({ loginDisabled: false }); 
+            else self.setState({ loginDisabled: false });
         });
         GLOBAL.EDITORCOMPONENT = this;
     }
 
-    backButtonPressed() 
+    backButtonPressed()
     {
         if (this.state.isUploading == false)
         {
             Actions.pop();
             GLOBAL.EDITORCOMPONENT = null;
         }
-        else
-            Alert.alert("HCMUS Avatar", "Ảnh hiện đang trong quá trình tải lên, vui lòng chờ quá trình này hoàn tất")
+        else Alert.alert("HCMUS Avatar", "Ảnh hiện đang trong quá trình tải lên, vui lòng chờ quá trình này hoàn tất")
     }
 
     componentDidMount() {
         StatusBar.setHidden(false);
     }
-
-    /*
-    
-    componentDidMount() {
-        //Override Android Back button
-        BackAndroid.addEventListener('hardwareBackPress', () => this.backButtonPressed());
-    }
-
-    componentWillUnmount() {
-        BackAndroid.removeEventListener('hardwareBackPress');
-    }
-
-    */
 
     componentWillMount() {
         GLOBAL.EDITORCOMPONENT = null;
@@ -116,9 +99,9 @@ export default class EditorScene extends Component {
     }
 
     //Share new picture
-    cmdSharePict() 
+    cmdSharePict()
     {
-        if (GLOBAL.TOKEN != null) 
+        if (GLOBAL.TOKEN != null)
         {
             if (this.state.isUploading == false)
             {
@@ -129,51 +112,59 @@ export default class EditorScene extends Component {
                         { text: 'Hủy', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
                         {
                             text: 'OK', onPress: () => {
-                                checkInternet(data => {
-                                    if (data)
-                                    {
-                                        fetch(GLOBAL.FATHERLINK + '/users/updatenum', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({
-                                                id: GLOBAL.OVERLAYID
-                                            })
-                                        });
+                            checkInternet(data => {
+                                if (data)
+                                {
+                                    fetch(GLOBAL.FATHERLINK + '/users/updatenum', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            id: GLOBAL.OVERLAYID
+                                        })
+                                    });
 
-                                        takeSnapshot(this.refs["newPict"], this.state.value)
-                                            .then(res => this.setState({
-                                                error: null,
-                                                res,
-                                                previewSource: {
-                                                    uri:
+                                    GLOBAL.MAINCOMPONENT.state.fetchData.forEach((item) => {
+                                        if (item._id == GLOBAL.OVERLAYID)
+                                        {
+                                            ++item.num_user;
+                                            GLOBAL.MAINCOMPONENT.forceUpdate();
+                                        }
+                                    });
+
+                                    takeSnapshot(this.refs["newPict"], this.state.value)
+                                        .then(res => this.setState({
+                                            error: null,
+                                            res,
+                                            previewSource: {
+                                                uri:
                                                     this.state.value.result === "base64"
                                                         ? "data:image/" + this.state.value.format + ";base64," + res
                                                         : res
-                                                }
-                                            }, () => {
-                                                this.setState({ isUploading: true, uploadImage: require('../images/btnFB_disabled.png'), uploadText: 'Đang tải\nlên...' });
-                                                RNFetchBlob.fetch('POST', `https://graph.facebook.com/me/photos?access_token=${GLOBAL.TOKEN}`, {
-                                                    'Content-Type': 'multipart/form-data',
-                                                }, [{ name: 'avatar', filename: 'avatar.png', type: 'image/', data: RNFetchBlob.wrap(this.state.previewSource.uri) },
-                                                        // elements without property filename will be sent as plain text 
-                                                    ]).then((resp) => {
-                                                        Alert.alert("HCMUS Avatar", "Ảnh đã được tải lên album của bạn thành công!");
-                                                        this.setState({ isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook' });
-                                                    }).catch((err) => {
-                                                        Alert.alert("HCMUS Avatar", "Có lỗi xảy ra, vui lòng thử lại sau.");
-                                                        this.setState({ isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook' });
-                                                    })
-                                            }))
-                                    }
-                                    else
-                                    {
-                                        Alert.alert("HCMUS Avatar", "Không có kết nối Internet, tải ảnh lên Facebook không khả dụng")
-                                    }
-                                })
-                                
-                            }
+                                            }
+                                        }, () => {
+                                            this.setState({ isUploading: true, uploadImage: require('../images/btnFB_disabled.png'), uploadText: 'Đang tải\nlên...' });
+                                            RNFetchBlob.fetch('POST', `https://graph.facebook.com/me/photos?access_token=${GLOBAL.TOKEN}`, {
+                                                'Content-Type': 'multipart/form-data',
+                                            }, [{ name: 'avatar', filename: 'avatar.png', type: 'image/', data: RNFetchBlob.wrap(this.state.previewSource.uri) },
+                                                // elements without property filename will be sent as plain text
+                                            ]).then((resp) => {
+                                                Alert.alert("HCMUS Avatar", "Ảnh đã được tải lên album của bạn thành công!");
+                                                this.setState({ isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook' });
+                                            }).catch((err) => {
+                                                Alert.alert("HCMUS Avatar", "Có lỗi xảy ra, vui lòng thử lại sau.");
+                                                this.setState({ isUploading: false, uploadImage: require('../images/btnFB.png'), uploadText: 'Tải lên\nFacebook' });
+                                            })
+                                        }))
+                                }
+                                else
+                                {
+                                    Alert.alert("HCMUS Avatar", "Không có kết nối Internet, tải ảnh lên Facebook không khả dụng")
+                                }
+                            })
+
+                        }
                         }
                     ]
                 )
@@ -197,57 +188,65 @@ export default class EditorScene extends Component {
                 res,
                 previewSource: {
                     uri:
-                    this.state.value.result === "base64"
-                        ? "data:image/" + this.state.value.format + ";base64," + res
-                        : res
+                        this.state.value.result === "base64"
+                            ? "data:image/" + this.state.value.format + ";base64," + res
+                            : res
                 },
             }, () => {
                 CameraRoll.saveToCameraRoll(this.state.previewSource.uri, 'photo')
-                .then((result) => {
-                    //Push use time count to server
-                    checkInternet(data => {
-                        if (data)
-                        {
-                            fetch(GLOBAL.FATHERLINK + '/users/updatenum', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    id: GLOBAL.OVERLAYID
+                    .then((result) => {
+                        //Push use time count to server
+                        checkInternet(data => {
+                            if (data)
+                            {
+                                fetch(GLOBAL.FATHERLINK + '/users/updatenum', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                        id: GLOBAL.OVERLAYID
+                                    })
                                 })
-                            })
-                        }
-                    })
+                            }
+                        })
 
-                    if (showAlert == true)
-                    {
-                        Alert.alert(
-                            'HCMUS Avatar',
-                            'Lưu vào thư viện ảnh thành công!',
-                            [{ text: 'OK', onPress: () => Actions.pop()} ]
-                        );
-                    }
-                    this.setState({ imgPath: result });
-                    //Callback
-                    callback(true);
+                        GLOBAL.MAINCOMPONENT.state.fetchData.forEach((item) => {
+                            if (item._id == GLOBAL.OVERLAYID)
+                            {
+                                ++item.num_user;
+                                GLOBAL.MAINCOMPONENT.forceUpdate();
+                            }
+                        });
+
+                        if (showAlert == true)
+                        {
+                            Alert.alert(
+                                'HCMUS Avatar',
+                                'Lưu vào thư viện ảnh thành công!',
+                                [{ text: 'OK', onPress: () => Actions.pop()} ]
+                            );
+                        }
+                        this.setState({ imgPath: result });
+                        //Callback
+                        callback(true);
                     })
-                .catch((e) => {
-                    Alert.alert(
-                        'HCMUS Avatar',
-                        'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n\n(Error Code: CameraRoll)',
-                        [{ text: 'OK' }]
+                    .catch((e) => {
+                            Alert.alert(
+                                'HCMUS Avatar',
+                                'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n\n(Error Code: CameraRoll)',
+                                [{ text: 'OK' }]
+                            );
+                            callback(false);
+                        }
                     );
-                    callback(false);
-                } 
-                );
             }))
             .catch(error => {
                 Alert.alert(
-                            'HCMUS Avatar',
-                            'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n\n(Error Code: ViewShot)',
-                            [{ text: 'OK' }]
-                        );  
+                    'HCMUS Avatar',
+                    'Có lỗi xảy trong quá trình lưu ảnh vào thiết bị, xin vui lòng thử lại sau\n\n(Error Code: ViewShot)',
+                    [{ text: 'OK' }]
+                );
                 this.setState({ error, res: null, previewSource: null });
                 callback(false);
             });
@@ -277,7 +276,7 @@ export default class EditorScene extends Component {
             GLOBAL.CURRENTEDITOR = 2;
             Actions.newEditor2({ data: this.props.data });
         }
-        else 
+        else
         {
             GLOBAL.CURRENTEDITOR = 1;
             Actions.newEditor1({ data: this.props.data });
@@ -310,8 +309,8 @@ export default class EditorScene extends Component {
                     onLoad={() => console.log("Image loaded!")}
                     style={{ width: this.state.imageSize, height: this.state.imageSize, transform: [{ rotate: this.state.rotateAngle + ' deg' }] }} />
 
-                <Image 
-                    source={{ uri: `file://${RNFS.DocumentDirectoryPath}/hcmusavatar_${overlayID}.png` }} 
+                <Image
+                    source={{ uri: `file://${RNFS.DocumentDirectoryPath}/hcmusavatar_${overlayID}.png` }}
                     style={{top: 0, left: 0, position: 'absolute', opacity: this.state.overlayOpacity, width: this.state.overlaySize, height: this.state.overlaySize}}
                     imageSize='contain'/>
 
@@ -320,45 +319,22 @@ export default class EditorScene extends Component {
     }
 
     //Cover view to prevent user from editting when done
-    renderProtectedView() 
+    renderProtectedView()
     {
         if (!this.state.show)
             return(null)
         else
             return(
-                <View style={{ width: this.state.imageSize, height: this.state.imageSize, 
+                <View style={{ width: this.state.imageSize, height: this.state.imageSize,
                             position: 'absolute', top: 50, left: 0, backgroundColor: 'transparent' }} />
             )
     }
 
     //Quick function render the buttons
     renderBigButton(imagePath, imageWidth, imageHeight, text, eventHandler, animated, animationDelay)
-    {   
+    {
         return(
             <TouchableHighlight style={{flex: 1}} onPress={eventHandler} underlayColor='#F2F2F2'>
-                <View
-                    animation={animated} duration={350} delay={animationDelay}
-                    style={{alignItems:'center', justifyContent: 'center', padding: 10}}>
-
-                    <Image
-                        source={imagePath}
-                        style={{width: imageWidth, height: imageHeight}}
-                        resizeMode='stretch'
-                    />
-
-                    <Text style={{marginTop: 5, textAlign: 'center'}}>{text}</Text>
-                </View>
-            </TouchableHighlight>
-        )
-    }
-
-    renderSmallButton(imagePath, imageWidth, imageHeight, eventHandler, animated, animationDelay)
-    {   
-        return(
-            <TouchableHighlight 
-                style={{width: imageWidth + 5, height: imageHeight + 5}} 
-                onPress={eventHandler} underlayColor='#F2F2F2'>
-
                 <View
                     animation={animated} duration={350} delay={animationDelay}
                     style={{alignItems:'center', justifyContent: 'center', padding: 10}}>
@@ -378,13 +354,13 @@ export default class EditorScene extends Component {
     //Render the button and slider area
     renderToolEditor() {
         let st = Dimensions.get('window').width;
-        if (this.state.show == false) 
+        if (this.state.show == false)
         {
             return (
                 <View style={{ padding: 15, width: st, flex: 1, justifyContent: 'center', backgroundColor: 'white' }}>
 
                     <View
-                        animation='fadeIn' duration={350} 
+                        animation='fadeIn' duration={350}
                         style={{ flexDirection:'row', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
 
                         <Text>Độ trong suốt       </Text>
@@ -408,7 +384,7 @@ export default class EditorScene extends Component {
                             minimumTrackTintColor='#63d3ff'
                             style={{flex: 1, marginLeft: 5}}
                             onValueChange = {(overlayOpacity) => this.setState({ overlayOpacity: overlayOpacity / 10 }) }
-                            />
+                        />
                     </View>
 
                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flex: 2, marginTop: 10, marginRight: 60, marginLeft: 60 }} >
@@ -416,10 +392,10 @@ export default class EditorScene extends Component {
                         { this.renderBigButton(require('../images/btnAlbum.png'), 25, 22, 'Ảnh khác', () => this.openModal3(), 'fadeInUp', 200) }
                     </View>
 
-                    <TouchableHighlight 
-                        style={{width: 45, height: 42, position: 'absolute', bottom: 15, left: 10}} 
+                    <TouchableHighlight
+                        style={{width: 45, height: 42, position: 'absolute', bottom: 15, left: 10}}
                         onPress={() => this.cmdReset()} underlayColor='#F2F2F2'>
-                        
+
                         <View
                             animation={'fadeInUp'} duration={350} delay={500}
                             style={{alignItems:'center', justifyContent: 'center', flexDirection: 'row', padding: 10}}>
@@ -434,8 +410,8 @@ export default class EditorScene extends Component {
                         </View>
                     </TouchableHighlight>
 
-                    <TouchableHighlight 
-                        style={{width: 45, height: 42, position: 'absolute', bottom: 15, right: 10}} 
+                    <TouchableHighlight
+                        style={{width: 45, height: 42, position: 'absolute', bottom: 15, right: 10}}
                         onPress={() => this.toggleShow()} underlayColor='#F2F2F2'>
 
                         <View
@@ -454,11 +430,11 @@ export default class EditorScene extends Component {
                     </TouchableHighlight>
                 </View>
             )
-        } 
-        else 
+        }
+        else
             return (
                 <View
-                    
+
                     style={{ padding: 15, width: st, flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' }}>
 
                     <View style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
@@ -490,18 +466,18 @@ export default class EditorScene extends Component {
                         </View>
                     </View>
 
-                    
+
                 </View>
             )
     }
 
-    renderEditButton() 
+    renderEditButton()
     {
         let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         if (this.state.show)
         {
             return(
-                 <TouchableHighlight
+                <TouchableHighlight
                     onPress={() => this.toggleShow() }
                     style={{position: 'absolute', top: barHeight, right: 0, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'}}
                     underlayColor={GLOBAL.STATUS_COLOR}>
@@ -513,14 +489,14 @@ export default class EditorScene extends Component {
                 </TouchableHighlight>
             )
         }
-        else 
+        else
         {
             return(null)
         }
     }
 
     //Main render function
-    render() {    
+    render() {
         let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         return (
             <View style={[styles.container]}>
@@ -537,7 +513,7 @@ export default class EditorScene extends Component {
                         resizeMode='stretch'/>
 
                 </View>
-                
+
                 {/* Back button */}
                 <TouchableHighlight
                     onPress={() => this.backButtonPressed()}
@@ -548,12 +524,15 @@ export default class EditorScene extends Component {
                         style={{width: 35, height: 35}}/>
                 </TouchableHighlight>
 
-               { this.renderEditButton() }
+                { this.renderEditButton() }
 
-                <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+                <ScrollView
+                    style={{ flex: 1, backgroundColor: 'white' }}
+                    contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+
                     { this.renderProfilePict() }
                     { this.renderToolEditor() }
-                </View>
+                </ScrollView>
 
                 <PopupSelection ref='modal3' onEditor={true}/>
 

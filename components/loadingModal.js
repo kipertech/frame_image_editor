@@ -1,21 +1,27 @@
 import React, { Component } from 'react';
-import { View, Text, ActivityIndicator, Dimensions, Platform } from 'react-native';
-import ImagePicker from 'react-native-image-crop-picker'
+import { Text, ActivityIndicator, Dimensions, Platform } from 'react-native';
 import Modal from 'react-native-modalbox';
 
-export default class LoadingModal extends Component {
+let st = Dimensions.get('window');
+
+export default class LoadingModal extends Component
+{
     constructor(props) {
         super(props);
     }
 
-    open() 
-    {
-        this.refs.progressDialog.open();
+    propTypes: {
+        loadingText: React.PropTypes.string;
     }
 
-    close() 
+    open() 
     {
-        this.refs.progressDialog.close();
+        this.mainModal.open();
+    }
+
+    close()
+    {
+        this.mainModal.close();
     }
 
     //Render Progress Dialog
@@ -25,18 +31,18 @@ export default class LoadingModal extends Component {
         if (Platform.OS == 'ios')
             loaderSize = 'large'
         else loaderSize = 50;
-        //
-        let st = Dimensions.get('window').width;
+
+        //Main render function
         return(
             <Modal {...this.props}
-                style={{ flexDirection: 'row', height: 100, width: st - 100, alignItems: 'center' }}
-                position={'center'} ref={'progressDialog'} 
+                ref={(component) => this.mainModal = component}
+                style={{ flexDirection: 'row', height: 100, width: st.width - 100, alignItems: 'center' }}
+                position={'center'}
                 backButtonClose={false}
                 backdropPressToClose={false}
                 swipeToClose={false}
                 backdropOpacity={0.7}
-                animationDuration={100}
-                >
+                animationDuration={100}>
 
                 <ActivityIndicator
                     animating={true}
@@ -44,7 +50,7 @@ export default class LoadingModal extends Component {
                     size={loaderSize}
                 />
 
-                <Text style={{fontSize: 15, width: st - 200 - 10}}>{this.props.loadingText}</Text>
+                <Text style={{fontSize: 15, width: st.width - 200 - 10}}>{this.props.loadingText}</Text>
             </Modal>
         )
     }

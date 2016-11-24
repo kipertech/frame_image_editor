@@ -1,14 +1,4 @@
-import React, { Component } from 'react';
 import { AppRegistry } from 'react-native';
-import Main from './main';
+import Main from './main.js';
 
-class HCMUSAvatar extends Component 
-{
-    render() {
-        return (
-            <Main/>
-        );
-    }
-}
-
-AppRegistry.registerComponent('HCMUSAvatar', () => HCMUSAvatar);
+AppRegistry.registerComponent('hcmusavatar', () => Main);

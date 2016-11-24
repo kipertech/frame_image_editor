@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0800"
+   LastUpgradeVersion = "0620"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -15,23 +15,23 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "HCMUSAvatar.app"
-               BlueprintName = "HCMUSAvatar"
-               ReferencedContainer = "container:HCMUSAvatar.xcodeproj">
+               BuildableName = "hcmusavatar.app"
+               BlueprintName = "hcmusavatar"
+               ReferencedContainer = "container:hcmusavatar.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
+            buildForTesting = "NO"
+            buildForRunning = "NO"
             buildForProfiling = "NO"
             buildForArchiving = "NO"
-            buildForAnalyzing = "YES">
+            buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "HCMUSAvatarTests.xctest"
-               BlueprintName = "HCMUSAvatarTests"
-               ReferencedContainer = "container:HCMUSAvatar.xcodeproj">
+               BuildableName = "hcmusavatarTests.xctest"
+               BlueprintName = "hcmusavatarTests"
+               ReferencedContainer = "container:hcmusavatar.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -42,24 +42,14 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "HCMUSAvatarTests.xctest"
-               BlueprintName = "HCMUSAvatarTests"
-               ReferencedContainer = "container:HCMUSAvatar.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "HCMUSAvatar.app"
-            BlueprintName = "HCMUSAvatar"
-            ReferencedContainer = "container:HCMUSAvatar.xcodeproj">
+            BuildableName = "hcmusavatar.app"
+            BlueprintName = "hcmusavatar"
+            ReferencedContainer = "container:hcmusavatar.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -80,9 +70,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "HCMUSAvatar.app"
-            BlueprintName = "HCMUSAvatar"
-            ReferencedContainer = "container:HCMUSAvatar.xcodeproj">
+            BuildableName = "hcmusavatar.app"
+            BlueprintName = "hcmusavatar"
+            ReferencedContainer = "container:hcmusavatar.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -99,9 +89,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "HCMUSAvatar.app"
-            BlueprintName = "HCMUSAvatar"
-            ReferencedContainer = "container:HCMUSAvatar.xcodeproj">
+            BuildableName = "hcmusavatar.app"
+            BlueprintName = "hcmusavatar"
+            ReferencedContainer = "container:hcmusavatar.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

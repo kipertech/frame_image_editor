@@ -3,20 +3,15 @@ import {
     View,
     Text,
     StyleSheet,
-    ScrollView,
     Image,
-    TouchableOpacity,
     TouchableHighlight,
-    NativeModules,
     Dimensions,
-    AppRegistry,
     Alert
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker'
 import Modal from 'react-native-modalbox';
 import { Actions } from 'react-native-router-flux'
-import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
-import { alertLogin, loginFb, getPictURL, getProfileImageURL, getImageUri } from './login'
+import { alertLogin, getProfileImageURL } from './features_FB'
 GLOBAL = require('./global');
 
 export default class PopUpSelection extends Component {
@@ -64,7 +59,7 @@ export default class PopUpSelection extends Component {
 
     }
 
-    componentWilldMount() {
+    componentWillMount() {
         GLOBAL.ONEDITOR = this.props.onEditor;
     }
 

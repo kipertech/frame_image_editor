@@ -1,13 +1,10 @@
-package com.piksalstudio.hcmus.avatar;
+package com.hcmusavatar;
 
 import android.content.Intent;
 
 import com.burnweb.rnpermissions.RNPermissionsPackage;
 import com.facebook.react.ReactActivity;
-import com.reactnative.photoview.PhotoViewPackage;
-import com.RNFetchBlob.RNFetchBlobPackage;
-import com.reactnative.ivpusic.imagepicker.PickerPackage;
-import com.oblador.vectoricons.VectorIconsPackage;
+import com.facebook.reactnative.androidsdk.FBSDKPackage;
 
 public class MainActivity extends ReactActivity {
 
@@ -17,19 +14,18 @@ public class MainActivity extends ReactActivity {
      */
     @Override
     protected String getMainComponentName() {
-        return "HCMUSAvatar";
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-        MainApplication.getCallbackManager().onActivityResult(requestCode, resultCode, data);
+        return "hcmusavatar";
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         RNPermissionsPackage.onRequestPermissionsResult(requestCode, permissions, grantResults); // very important event callback
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        MainApplication.getCallbackManager().onActivityResult(requestCode, resultCode, data);
     }
 }

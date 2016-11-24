@@ -1,7 +1,7 @@
 import React from 'react';
-import { Alert, AsyncStorage, NetInfo } from 'react-native';
+import { Alert, NetInfo } from 'react-native';
 import { Actions } from 'react-native-router-flux'
-import { LoginButton, AccessToken, LoginManager } from 'react-native-fbsdk';
+import { AccessToken, LoginManager } from 'react-native-fbsdk';
 
 export function checkInternet(callback)
 {
@@ -12,7 +12,7 @@ export function checkInternet(callback)
     });
 }
 
-export function checkLoggedIn(callback) 
+export function checkLoggedIn(callback)
 {
     checkInternet(data => {
         if (data)
@@ -39,7 +39,7 @@ export function checkLoggedIn(callback)
     })
 }
 
-export function alertLogin(isUpload) 
+export function alertLogin(isUpload)
 {
     Alert.alert(
         'HCMUS Avatar',
@@ -51,14 +51,14 @@ export function alertLogin(isUpload)
     )
 }
 
-export function loginFb(isUpload, callback) 
+export function loginFb(isUpload, callback)
 {
     checkInternet(data => {
         if (data)
         {
             LoginManager.logInWithPublishPermissions(['publish_actions']).then(
                 function (result) {
-                    if (!result.isCancelled) 
+                    if (!result.isCancelled)
                     {
                         AccessToken.getCurrentAccessToken().then(
                             (data) => {
@@ -70,13 +70,13 @@ export function loginFb(isUpload, callback)
                                     getProfileImageURL((data) => {
                                         if (data == false)
                                             Alert.alert('HCMUS Avatar', 'Lỗi trong khi lấy ảnh đại diện từ Facebook, xin vui lòng thử lại sau');
-                                            
+
                                         //Close progress dialog
                                         GLOBAL.MAINCOMPONENT.closeProgress();
                                         if (GLOBAL.EDITORCOMPONENT != null)
                                             GLOBAL.EDITORCOMPONENT.closeProgress();
                                     });
-                                
+
                                 { GLOBAL.mainCallback(); }
 
                             }).done();
@@ -102,7 +102,7 @@ export function loginFb(isUpload, callback)
     })
 }
 
-export function getProfileImageURL(callback) 
+export function getProfileImageURL(callback)
 {
     checkInternet(data => {
         if (data)
@@ -117,11 +117,11 @@ export function getProfileImageURL(callback)
                     pictUrl = `https://graph.facebook.com/v2.3/${responseData.id}/picture?width=500&redirect=false&access_token=${GLOBAL.TOKEN}`;
                     fetch(pictUrl)
                         .then(response => response.json())
-                        .then(responseData => { 
+                        .then(responseData => {
                             getImageUri(responseData.data.url);
                             if (responseData.data.url != null && responseData.data.url != undefined)
                                 callback(true)
-                            else callback(false); 
+                            else callback(false);
                         })
                         .done();
                 })
@@ -153,15 +153,15 @@ export function getProfileImageURL2(callback) {
 
 export function getImageUri(path) {
     if (GLOBAL.ONEDITOR == false)
-      Actions.editor({ data: path });
-    else 
+        Actions.editor({ data: path });
+    else
     {
         if (GLOBAL.CURRENTEDITOR == 1)
         {
             GLOBAL.CURRENTEDITOR = 2;
             Actions.newEditor2({ data: path });
         }
-        else 
+        else
         {
             GLOBAL.CURRENTEDITOR = 1;
             Actions.newEditor1({ data: path });
