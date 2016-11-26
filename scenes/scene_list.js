@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import ReactNative, {
     Text,
-    StyleSheet,
+    AsyncStorage,
     TouchableOpacity,
     TouchableHighlight,
     StatusBar,
@@ -67,7 +67,6 @@ export default class ListScene extends Component
                 this.checkFacebook(false);
         });
         GLOBAL.MAINCOMPONENT = this;
-        this.checkConnection();
     }
 
     componentDidMount() {
@@ -115,32 +114,50 @@ export default class ListScene extends Component
                     .then((responseJson) => {
                         this.setState({ fetchData: responseJson.reverse() });
                         this.state.fetchData.forEach((item, index) => { this.downloadImage(item, index) });
+                        AsyncStorage.setItem('hcmus_avatar_data', JSON.stringify(responseJson));
                         this.fetchingProgress.close();
-                    })
+                    });
+
+                this.forceUpdate();
+
+                //Enable rendering
+                this.setState({ isConnected: true });
+            }
+            else
+            {
+                let tempData = AsyncStorage.getItem('hcmus_avatar_data');
+                if (tempData !== null && tempData !== undefined && tempData !== '')
+                {
+                    tempData.then((res) => this.setState({ fetchData: JSON.parse(res), isConnected: true }));
+                }
+                else
+                {
+                    alert('Nothing in storage');
+                    this.setState({ isConnected: false, fetchData: []});
+                };
             }
         })
-    }
-
-    //Check if Internet conenction is available
-    checkConnection()
-    {
-        let check = false;
-        checkInternet((data) => {
-            if (data)
-                this.setState({isConnected: true})
-            else
-                this.setState({isConnected: false});
-            check = data;
-        })
-        return(check);
     }
 
     //Download image data from server
     downloadImage(item, index)
     {
+        RNFS.exists(`${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`)
+            .then((res) => {
+                if (res) return;
+            });
+
+        //Overlay
         RNFS.downloadFile({
             fromUrl: GLOBAL.FATHERLINK + `${item.url_avatar}`,
             toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`,
+        }).promise
+            .then((result) => { console.log(result) }).done();
+
+        //Image
+        RNFS.downloadFile({
+            fromUrl: GLOBAL.FATHERLINK + `${item.url_img}`,
+            toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_img_${item._id}.png`,
         }).promise
             .then((result) => { console.log(result) }).done();
     }
@@ -331,12 +348,12 @@ export default class ListScene extends Component
                     {/* Picture area */}
                     <View style={{ width: st, height: st, overflow: 'hidden' }}>
                         <Image
-                            source={{ uri: GLOBAL.FATHERLINK + `${item.url_img}` }}
+                            source={{ uri: `file://${RNFS.DocumentDirectoryPath}/hcmusavatar_img_${item._id}.png` }}
                             style={{ width: st, height: st }}
                             resizeMode='stretch' />
 
                         <Image
-                            source={{ uri: GLOBAL.FATHERLINK + `${item.url_avatar}` }}
+                            source={{ uri: `file://${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`}}
                             style={{ position: 'absolute', top: 0, left: 0, height: st, width: st, opacity: 1 }}
                             resizeMode='stretch' />
                     </View>
@@ -421,7 +438,6 @@ export default class ListScene extends Component
             return(
                 <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white'}}>
                     <TouchableOpacity onPress={() => {
-                        { this.checkConnection() }
                         { this.fetchImageData() }
                     }}>
                         <Image
@@ -437,4 +453,3 @@ export default class ListScene extends Component
         }
     }
 }
-
