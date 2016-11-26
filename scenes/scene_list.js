@@ -56,6 +56,7 @@ export default class ListScene extends Component
             //Server
             fetchData: [],
             isConnected: false,
+            imgOpactiy: 0.9
         };
     }
 
@@ -98,8 +99,8 @@ export default class ListScene extends Component
                             });
                     });
         }
-        this.fetchImageData();
         StatusBar.setHidden(false);
+        this.fetchImageData();
     }
 
     //Fetch image JSON from server
@@ -112,16 +113,12 @@ export default class ListScene extends Component
                 fetch(GLOBAL.FATHERLINK + '/users/getimages')
                     .then((response) => response.json())
                     .then((responseJson) => {
-                        this.setState({ fetchData: responseJson.reverse() });
-                        this.state.fetchData.forEach((item, index) => { this.downloadImage(item, index) });
+                        this.setState({ fetchData: responseJson.reverse(), isConnected: true });
+                        this.state.fetchData.forEach((item) => this.downloadImage(item));
                         AsyncStorage.setItem('hcmus_avatar_data', JSON.stringify(responseJson));
                         this.fetchingProgress.close();
-                    });
-
-                this.forceUpdate();
-
-                //Enable rendering
-                this.setState({ isConnected: true });
+                    })
+                    .done();
             }
             else
             {
@@ -133,14 +130,14 @@ export default class ListScene extends Component
                 else
                 {
                     alert('Nothing in storage');
-                    this.setState({ isConnected: false, fetchData: []});
+                    this.setState({ isConnected: false, fetchData: [] });
                 };
             }
         })
     }
 
     //Download image data from server
-    downloadImage(item, index)
+    downloadImage(item)
     {
         RNFS.exists(`${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`)
             .then((res) => {
@@ -159,7 +156,7 @@ export default class ListScene extends Component
             fromUrl: GLOBAL.FATHERLINK + `${item.url_img}`,
             toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_img_${item._id}.png`,
         }).promise
-            .then((result) => { console.log(result) }).done();
+            .then((result) => { console.log(result); this.setState({ imgOpactiy: 1 }); }).done();
     }
 
     //Update Facebook info to drawer
@@ -354,7 +351,7 @@ export default class ListScene extends Component
 
                         <Image
                             source={{ uri: `file://${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`}}
-                            style={{ position: 'absolute', top: 0, left: 0, height: st, width: st, opacity: 1 }}
+                            style={{ position: 'absolute', top: 0, left: 0, height: st, width: st, opacity: this.state.imgOpactiy }}
                             resizeMode='stretch' />
                     </View>
 
@@ -422,6 +419,16 @@ export default class ListScene extends Component
         );
     }
 
+    mapAllItems()
+    {
+        if (this.state.fetchData !== null && this.state.fetchData.length > 0)
+        {
+            return(
+                this.state.fetchData.map((item, index) => this.renderCard(item, index))
+            )
+        };
+    }
+
     //Render all items to list
     renderList()
     {
@@ -429,7 +436,7 @@ export default class ListScene extends Component
         {
             return(
                 <ScrollView ref={(comp) => this.mainList = comp} style={{ backgroundColor: 'white' }}>
-                    { this.state.fetchData.map((item, index) => this.renderCard(item, index)) }
+                    { this.mapAllItems() }
                 </ScrollView>
             );
         }

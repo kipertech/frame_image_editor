@@ -2,3 +2,6 @@ android/app/build
 node_modules
 android/.idea
 android/.gradle
+.idea/
+android/build/
+android/local.properties
