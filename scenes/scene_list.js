@@ -8,6 +8,7 @@ import ReactNative, {
     Dimensions,
     Alert,
     Platform,
+    ActivityIndicator
 } from 'react-native';
 
 import {
@@ -30,6 +31,7 @@ GLOBAL = require('../components/global');
 
 const ScrollView = createAnimatableComponent(ReactNative.ScrollView);
 const Image = createAnimatableComponent(ReactNative.Image);
+const barHeight = StatusBar.currentHeight;
 
 export default class ListScene extends Component
 {
@@ -56,8 +58,14 @@ export default class ListScene extends Component
             //Server
             fetchData: [],
             isConnected: false,
-            imgOpactiy: 0.9
+            imgOpactiy: 1,
+            isFullyLoaded: false
         };
+
+        this.imageData = {
+            totalImage: 0,
+            totalLoaded: 0
+        }
     }
 
     componentWillMount() {
@@ -109,29 +117,25 @@ export default class ListScene extends Component
         checkInternet(data => {
             if (data)
             {
-                this.fetchingProgress.open();
                 fetch(GLOBAL.FATHERLINK + '/users/getimages')
                     .then((response) => response.json())
                     .then((responseJson) => {
                         this.setState({ fetchData: responseJson.reverse(), isConnected: true });
+                        this.imageData.totalImage = responseJson.length;
+                        //
                         this.state.fetchData.forEach((item) => this.downloadImage(item));
                         AsyncStorage.setItem('hcmus_avatar_data', JSON.stringify(responseJson));
-                        this.fetchingProgress.close();
                     })
                     .done();
             }
             else
             {
-                let tempData = AsyncStorage.getItem('hcmus_avatar_data');
-                if (tempData !== null && tempData !== undefined && tempData !== '')
-                {
-                    tempData.then((res) => this.setState({ fetchData: JSON.parse(res), isConnected: true }));
-                }
-                else
-                {
-                    alert('Nothing in storage');
-                    this.setState({ isConnected: false, fetchData: [] });
-                };
+                AsyncStorage.getItem('hcmus_avatar_data').then((tempData) => {
+                    if (tempData !== undefined && tempData !== '' && tempData !== null)
+                        this.setState({ fetchData: JSON.parse(tempData), isConnected: true, isFullyLoaded: true });
+                    else
+                        this.setState({ isConnected: false, fetchData: [] });
+                });
             }
         })
     }
@@ -141,22 +145,38 @@ export default class ListScene extends Component
     {
         RNFS.exists(`${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`)
             .then((res) => {
-                if (res) return;
+                if (res)
+                {
+                    ++this.imageData.totalLoaded;
+
+                    //Start rendering when download is done
+                    if (this.imageData.totalLoaded == this.imageData.totalImage)
+                        this.setState({ isFullyLoaded: true });
+                }
+                else
+                {
+                    //Overlay
+                    RNFS.downloadFile({
+                        fromUrl: GLOBAL.FATHERLINK + `${item.url_avatar}`,
+                        toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`,
+                    }).promise
+                        .then((result) => {
+                            if (result)
+                                ++this.imageData.totalLoaded;
+
+                            //Start rendering when download is done
+                            if (this.imageData.totalLoaded == this.imageData.totalImage)
+                                this.setState({ isFullyLoaded: true });
+                        }).done();
+
+                    //Image
+                    RNFS.downloadFile({
+                        fromUrl: GLOBAL.FATHERLINK + `${item.url_img}`,
+                        toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_img_${item._id}.png`,
+                    }).promise
+                        .then((result) => { console.log('Loaded ', item._id) }).done();
+                }
             });
-
-        //Overlay
-        RNFS.downloadFile({
-            fromUrl: GLOBAL.FATHERLINK + `${item.url_avatar}`,
-            toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_${item._id}.png`,
-        }).promise
-            .then((result) => { console.log(result) }).done();
-
-        //Image
-        RNFS.downloadFile({
-            fromUrl: GLOBAL.FATHERLINK + `${item.url_img}`,
-            toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_img_${item._id}.png`,
-        }).promise
-            .then((result) => { console.log(result); this.setState({ imgOpactiy: 1 }); }).done();
     }
 
     //Update Facebook info to drawer
@@ -264,7 +284,6 @@ export default class ListScene extends Component
                         {/* Info area */}
                         <View style={{
                             position: 'absolute', left: 0, top: 0, right: 0,
-                            justifyContent: 'center', alignItems: 'center',
                             height: st * 0.8 * 0.6, backgroundColor: GLOBAL.BAR_COLOR
                         }}>
                             <Image
@@ -272,13 +291,18 @@ export default class ListScene extends Component
                                 style={{ position: 'absolute', top: 0, left: 0, height: st * 0.8 * 0.6, width: st * 0.8 }}
                                 resizeMode='stretch' />
 
-                            <Image
-                                source={this.state.pictUrl}
-                                style={{ width: st / 5, height: st / 5, borderRadius: this.state.pictBorder }}
-                                resizeMode={this.state.pictResize} />
+                            <View style={{
+                                position: 'absolute', left: 0, top: barHeight - 10, right: 0, bottom: 0,
+                                justifyContent: 'center', alignItems: 'center' }}>
+                                <Image
+                                    source={this.state.pictUrl}
+                                    style={{ width: st / 5, height: st / 5, borderRadius: this.state.pictBorder }}
+                                    resizeMode={this.state.pictResize} />
 
-                            <Text style={{ fontWeight: 'bold', marginTop: 5, color: 'white', backgroundColor: 'transparent' }}>{this.state.userName}</Text>
-                            <Text style={{ color: 'white', backgroundColor: 'transparent' }}>{this.state.userID}</Text>
+                                <Text style={{ fontWeight: 'bold', marginTop: 5, color: 'white', backgroundColor: 'transparent' }}>{this.state.userName}</Text>
+                                <Text style={{ color: 'white', backgroundColor: 'transparent' }}>{this.state.userID}</Text>
+                            </View>
+
                         </View>
 
                         {/* Button area */}
@@ -310,6 +334,8 @@ export default class ListScene extends Component
             >
 
             {this.renderActionBar()}
+
+            <PopUpSelection ref='mainModal' onEditor={false} />
 
             </Drawer>
         )
@@ -382,7 +408,6 @@ export default class ListScene extends Component
 
     //Render the tabs
     renderActionBar() {
-        let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         return (
             <View style={{ flex: 1, backgroundColor: GLOBAL.STATUS_COLOR }} >
 
@@ -407,8 +432,6 @@ export default class ListScene extends Component
 
                 {this.renderList()}
 
-                <PopUpSelection ref='mainModal' onEditor={false} />
-
                 <LoadingModal
                     ref={(comp) => this.facebookProgress = comp}
                     loadingText='Đang tải ảnh đại diện Facebook...'/>
@@ -432,13 +455,33 @@ export default class ListScene extends Component
     //Render all items to list
     renderList()
     {
+        var loaderSize;
+        if (Platform.OS == 'ios')
+            loaderSize = 'large'
+        else loaderSize = 50;
+
+        let st = Dimensions.get('window').width;
+
         if (this.state.isConnected)
         {
-            return(
-                <ScrollView ref={(comp) => this.mainList = comp} style={{ backgroundColor: 'white' }}>
-                    { this.mapAllItems() }
-                </ScrollView>
-            );
+            if (this.state.isFullyLoaded)
+                return(
+                    <ScrollView ref={(comp) => this.mainList = comp} style={{ backgroundColor: 'white' }}>
+                        { this.mapAllItems() }
+                    </ScrollView>
+                )
+            else
+                return(
+                    <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white'}}>
+                        <ActivityIndicator
+                            animating={true}
+                            style={{width: 100, height: 100}}
+                            size={loaderSize}
+                        />
+
+                        <Text style={{ width: st - 100, textAlign: 'center' }}>Đang tải dữ liệu hình ảnh, vui lòng chờ...</Text>
+                    </View>
+                )
         }
         else
         {
@@ -454,7 +497,9 @@ export default class ListScene extends Component
                         />
                     </TouchableOpacity>
 
-                    <Text>Không có kết nối Internet</Text>
+                    <Text style={{ width: st - 100, textAlign: 'center' }}>
+                        Kết nối Internet không khả dụng.{'\n\n'}Chạm vào nút trên để thử lại.
+                    </Text>
                 </View>
             )
         }

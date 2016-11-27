@@ -473,7 +473,7 @@ export default class EditorScene extends Component {
 
     renderEditButton()
     {
-        let barHeight = (Platform.OS == 'ios') ? 20 : 0;
+        let barHeight = StatusBar.currentHeight;
         if (this.state.show)
         {
             return(
@@ -500,10 +500,6 @@ export default class EditorScene extends Component {
         let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         return (
             <View style={[styles.container]}>
-                <StatusBar
-                    backgroundColor = {GLOBAL.STATUS_COLOR}
-                    barStyle="light-content"
-                />
 
                 {/* Action Bar */}
                 <View style={{backgroundColor: GLOBAL.BAR_COLOR, marginTop: barHeight, height: 50, width: Dimensions.get('window').width, padding: 5, alignItems: 'center', justifyContent: 'center', flexDirection: 'row'}}>

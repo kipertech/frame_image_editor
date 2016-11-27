@@ -17,7 +17,8 @@ export default class Main extends Component
         return(
             <View style={{flex: 1}}>
                 <StatusBar
-                    backgroundColor={GLOBAL.STATUS_COLOR}
+                    backgroundColor={'rgba(0, 0, 0, 0.1)'}
+                    translucent={true}
                     barStyle="light-content"/>
 
                 <Router>

@@ -5,3 +5,4 @@ android/.gradle
 .idea/
 android/build/
 android/local.properties
+.tmp/
