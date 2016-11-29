@@ -31,7 +31,7 @@ GLOBAL = require('../components/global');
 
 const ScrollView = createAnimatableComponent(ReactNative.ScrollView);
 const Image = createAnimatableComponent(ReactNative.Image);
-const barHeight = StatusBar.currentHeight;
+const barHeight = (Platform.OS == 'ios') ? 20 : StatusBar.currentHeight;
 
 export default class ListScene extends Component
 {
@@ -163,10 +163,6 @@ export default class ListScene extends Component
                         .then((result) => {
                             if (result)
                                 ++this.imageData.totalLoaded;
-
-                            //Start rendering when download is done
-                            if (this.imageData.totalLoaded == this.imageData.totalImage)
-                                this.setState({ isFullyLoaded: true });
                         }).done();
 
                     //Image
@@ -174,7 +170,16 @@ export default class ListScene extends Component
                         fromUrl: GLOBAL.FATHERLINK + `${item.url_img}`,
                         toFile: `${RNFS.DocumentDirectoryPath}/hcmusavatar_img_${item._id}.png`,
                     }).promise
-                        .then((result) => { console.log('Loaded ', item._id) }).done();
+                        .then((result) => {
+                            if (result)
+                                ++this.imageData.totalLoaded;
+
+                            console.log(this.imageData.totalLoaded, this.imageData.totalImage);
+
+                            //Start rendering when download is done
+                            if (this.imageData.totalLoaded == (this.imageData.totalImage * 2))
+                                this.setState({ isFullyLoaded: true });
+                        }).done();
                 }
             });
     }
@@ -365,7 +370,7 @@ export default class ListScene extends Component
                             style={{ width: 45, height: 37, marginRight: 10, marginLeft: 10 }}
                             resizeMode='stretch' />
 
-                        <Text>{item.description}</Text>
+                        <Text style={{ width: st - 45 - 40 }} numberOfLines={1}>{item.description}</Text>
                     </View>
 
                     {/* Picture area */}

@@ -10,7 +10,8 @@ import {
     Dimensions,
     StatusBar,
     Platform,
-    ScrollView
+    ScrollView,
+    TouchableOpacity
 } from 'react-native';
 
 import { takeSnapshot } from 'react-native-view-shot';
@@ -25,7 +26,13 @@ import PopupSelection from '../components/modal';
 import LoadingModal from '../components/loadingModal';
 import { alertLogin, checkInternet } from '../components/features_FB';
 
+import {createResponder} from 'react-native-gesture-responder';
+
 GLOBAL = require('../components/global');
+
+let st = Dimensions.get('window');
+
+const barHeight = (Platform.OS == 'ios') ? 20 : StatusBar.currentHeight;
 
 export default class EditorScene extends Component {
     constructor(props) {
@@ -55,7 +62,10 @@ export default class EditorScene extends Component {
             //Upload to Facebook
             isUploading: false,
             uploadImage: require('../images/btnFB.png'),
-            uploadText: 'Tải lên Facebook'
+            uploadText: 'Tải lên Facebook',
+            thumbSize: Dimensions.get('window').width,
+            thumbLeft: 0,
+            thumbTop: 0,
         };
     }
 
@@ -65,15 +75,53 @@ export default class EditorScene extends Component {
         });
     }
 
-    componentWillMount()
-    {
-        const self = this
-        const value = AsyncStorage.getItem('fbtoken', (error, result) => {
-            if (result != null)
-                self.setState({ loginDisabled: true })
-            else self.setState({ loginDisabled: false });
-        });
+    componentWillMount() {
         GLOBAL.EDITORCOMPONENT = this;
+
+        this.gestureResponder = createResponder({
+            onStartShouldSetResponder: (evt, gestureState) => true,
+            onStartShouldSetResponderCapture: (evt, gestureState) => true,
+            onMoveShouldSetResponder: (evt, gestureState) => true,
+            onMoveShouldSetResponderCapture: (evt, gestureState) => true,
+
+            onResponderGrant: (evt, gestureState) => {},
+            onResponderMove: (evt, gestureState) => {
+                let thumbSize = this.state.thumbSize;
+                if (gestureState.pinch && gestureState.previousPinch)
+                    thumbSize *= (gestureState.pinch / gestureState.previousPinch);
+
+                if (thumbSize > Dimensions.get('window').width * 3)
+                    thumbSize = Dimensions.get('window').width * 3;
+
+                if (thumbSize < Dimensions.get('window').width / 3)
+                    thumbSize = Dimensions.get('window').width / 3;
+
+                let {thumbLeft, thumbTop} = this.state;
+                thumbLeft += (gestureState.moveX - gestureState.previousMoveX);
+                thumbTop += (gestureState.moveY - gestureState.previousMoveY);
+
+                if (thumbLeft < (100 - thumbSize))
+                    thumbLeft = 100 - thumbSize;
+
+                if (thumbLeft > (st.width - 100))
+                    thumbLeft = st.width - 100;
+
+                if (thumbTop < (100 - thumbSize))
+                    thumbTop = 100 - thumbSize;
+
+                if (thumbTop > (st.width - 100))
+                    thumbTop = st.width - 100;
+
+                this.setState({
+                    thumbSize, thumbLeft, thumbTop
+                });
+            },
+            onResponderTerminationRequest: (evt, gestureState) => true,
+            onResponderRelease: (evt, gestureState) => {},
+            onResponderTerminate: (evt, gestureState) => {},
+            onResponderSingleTapConfirmed: (evt, gestureState) => {},
+            debug: true
+        });
     }
 
     backButtonPressed()
@@ -90,7 +138,7 @@ export default class EditorScene extends Component {
         StatusBar.setHidden(false);
     }
 
-    componentWillMount() {
+    componentWillUnmount() {
         GLOBAL.EDITORCOMPONENT = null;
     }
 
@@ -291,23 +339,47 @@ export default class EditorScene extends Component {
         this.refs.progressDialog.close();
     }
 
+    getImageFrame()
+    {
+        const thumbSize = this.state.thumbSize;
+        if (Platform.OS == 'ios')
+        {
+            return(
+                <Image
+                    source={{ uri: this.props.data }}
+                    style={{
+                        width: thumbSize, height: thumbSize,
+                        position: 'absolute', left: this.state.thumbLeft, top: this.state.thumbTop,
+                        backgroundColor: 'gray',
+                        transform: [{ rotate: this.state.rotateAngle + ' deg' }] }}
+                />
+            )
+        }
+        else
+        {
+            return(
+                <PhotoView
+                    source={{ uri: this.props.data }}
+                    minimumZoomScale={1}
+                    maximumZoomScale={3}
+                    style={{
+                        width: this.state.imageSize, height: this.state.imageSize,
+                        transform: [{ rotate: this.state.rotateAngle + ' deg' }] }} />
+            )
+        }
+    }
+
     //Render profile picture
-    renderProfilePict() {
-        let pic = { uri: this.props.data };
+    renderProfilePict()
+    {
         let overlayID = GLOBAL.OVERLAYID;
         return (
             <View
                 ref='newPict'
-                style={{width: this.state.imageSize, height: this.state.imageSize, justifyContent: 'center', alignItems: 'center' }}
+                style={{width: this.state.imageSize, height: this.state.imageSize, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
                 collapsable={false}>
 
-                <PhotoView
-                    source={pic}
-                    minimumZoomScale={1}
-                    maximumZoomScale={3}
-                    scale={1}
-                    onLoad={() => console.log("Image loaded!")}
-                    style={{ width: this.state.imageSize, height: this.state.imageSize, transform: [{ rotate: this.state.rotateAngle + ' deg' }] }} />
+                { this.getImageFrame() }
 
                 <Image
                     source={{ uri: `file://${RNFS.DocumentDirectoryPath}/hcmusavatar_${overlayID}.png` }}
@@ -322,11 +394,21 @@ export default class EditorScene extends Component {
     renderProtectedView()
     {
         if (!this.state.show)
-            return(null)
+        {
+            if (Platform.OS == 'ios')
+                return(
+                    <View style={{
+                        width: this.state.thumbSize, height: this.state.thumbSize,
+                        position: 'absolute', left: this.state.thumbLeft, top: this.state.thumbTop + 50 + barHeight, backgroundColor: 'transparent' }}
+                          {...this.gestureResponder}
+                    />
+                )
+            else return(<View/>);
+        }
         else
             return(
                 <View style={{ width: this.state.imageSize, height: this.state.imageSize,
-                            position: 'absolute', top: 50, left: 0, backgroundColor: 'transparent' }} />
+                            position: 'absolute', top: 50 + barHeight, left: 0, backgroundColor: 'transparent' }} />
             )
     }
 
@@ -353,11 +435,10 @@ export default class EditorScene extends Component {
 
     //Render the button and slider area
     renderToolEditor() {
-        let st = Dimensions.get('window').width;
         if (this.state.show == false)
         {
             return (
-                <View style={{ padding: 15, width: st, flex: 1, justifyContent: 'center', backgroundColor: 'white' }}>
+                <View style={{ padding: 15, width: st.width, flex: 1, justifyContent: 'center', backgroundColor: 'white' }}>
 
                     <View
                         animation='fadeIn' duration={350}
@@ -435,7 +516,7 @@ export default class EditorScene extends Component {
             return (
                 <View
 
-                    style={{ padding: 15, width: st, flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' }}>
+                    style={{ padding: 15, width: st.width, flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white' }}>
 
                     <View style={{justifyContent: 'center', alignItems: 'center', flex: 1}}>
                         <Image
@@ -454,7 +535,7 @@ export default class EditorScene extends Component {
 
                                     <Image
                                         source={this.state.uploadImage}
-                                        style={{width: st / 5, height: st / 5}}
+                                        style={{width: st.width / 5, height: st.width / 5}}
                                         resizeMode='stretch'
                                     />
 
@@ -462,7 +543,7 @@ export default class EditorScene extends Component {
                                 </View>
                             </TouchableHighlight>
 
-                            { this.renderBigButton(require('../images/btnSaveToDevice.png'), st / 5, st / 5, 'Lưu vào thư viện', () => this.cmdSaveToDevice(), 'fadeIn', 0) }
+                            { this.renderBigButton(require('../images/btnSaveToDevice.png'), st.width / 5, st.width / 5, 'Lưu vào\nthư viện', () => this.cmdSaveToDevice(), 'fadeIn', 0) }
                         </View>
                     </View>
 
@@ -473,7 +554,6 @@ export default class EditorScene extends Component {
 
     renderEditButton()
     {
-        let barHeight = StatusBar.currentHeight;
         if (this.state.show)
         {
             return(
@@ -497,7 +577,6 @@ export default class EditorScene extends Component {
 
     //Main render function
     render() {
-        let barHeight = (Platform.OS == 'ios') ? 20 : 0;
         return (
             <View style={[styles.container]}>
 
@@ -522,19 +601,18 @@ export default class EditorScene extends Component {
 
                 { this.renderEditButton() }
 
-                <ScrollView
-                    style={{ flex: 1, backgroundColor: 'white' }}
-                    contentContainerStyle={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
+                <View
+                    style={{ flex: 1, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' }}>
 
                     { this.renderProfilePict() }
                     { this.renderToolEditor() }
-                </ScrollView>
+                </View>
+
+                { this.renderProtectedView() }
 
                 <PopupSelection ref='modal3' onEditor={true}/>
 
                 <LoadingModal ref='progressDialog' loadingText='Đang tải ảnh đại diện Facebook...'/>
-
-                { this.renderProtectedView() }
             </View>
         );
     }

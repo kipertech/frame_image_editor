@@ -6,6 +6,7 @@ import WelcomeScene from './scenes/scene_welcome';
 import EditorScene from './scenes/scene_editor';
 import ListScene from './scenes/scene_list';
 import LoadingScene from './scenes/scene_loading';
+import Test from './scenes/scene_test';
 
 export default class Main extends Component
 {
@@ -23,10 +24,11 @@ export default class Main extends Component
 
                 <Router>
                     <Scene key="root" hideNavBar={true}>
-                        <Scene key="splash" component={LoadingScene} title="HCMUS Avatar" initial="true" />
+                        <Scene key="test" component={Test} title="HCMUS Avatar - Test" />
+                        <Scene key="splash" component={LoadingScene} title="HCMUS Avatar" initial="true"/>
                         <Scene key="welcome" component={WelcomeScene} title="HCMUS Avatar" type='replace'/>
                         <Scene key="tabs" component={ListScene} title="HCMUS Avatar" type='replace'/>
-                        <Scene key="editor" component={EditorScene} title="HCMUS Avatar"/>
+                        <Scene key="editor" component={EditorScene} title="HCMUS Avatar" />
                         <Scene key="newEditor1" component={EditorScene} title="Edit Your Image" type="replace" hideNavBar={true}/>
                         <Scene key="newEditor2" component={EditorScene} title="Edit Your Image" type="replace" hideNavBar={true}/>
                     </Scene>

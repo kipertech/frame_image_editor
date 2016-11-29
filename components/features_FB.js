@@ -5,11 +5,17 @@ import { AccessToken, LoginManager } from 'react-native-fbsdk';
 
 export function checkInternet(callback)
 {
-    NetInfo.isConnected.fetch().then(isConnected => {
-        if (isConnected)
-            callback(true)
-        else callback(false);
-    });
+    try {
+        NetInfo.isConnected.fetch().then(isConnected => {
+            if (isConnected)
+                callback(true)
+            else callback(false);
+        });
+    }
+    catch(err)
+    {
+        console.log('Network Error')
+    }
 }
 
 export function checkLoggedIn(callback)

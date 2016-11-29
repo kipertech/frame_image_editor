@@ -1,4 +1,4 @@
 import { AppRegistry } from 'react-native';
-import Main from './main.js';
+import Main from './main';
 
 AppRegistry.registerComponent('hcmusavatar', () => Main);
