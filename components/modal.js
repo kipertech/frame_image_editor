@@ -24,20 +24,21 @@ export default class PopUpSelection extends Component {
     }
 
     //Open editor scene with selected image
-    openEditor(path) {
+    openEditor(path, w, h)
+    {
         if (this.props.onEditor == false)
-            Actions.editor({ data: path })
+            Actions.editor({ data: path, imgWidth: w, imgHeight: h })
         else 
         {
             if (GLOBAL.CURRENTEDITOR == 1)
             {
                 GLOBAL.CURRENTEDITOR = 2;
-                Actions.newEditor2({ data: path });
+                Actions.newEditor2({ data: path, imgWidth: w, imgHeight: h });
             }
             else 
             {
                 GLOBAL.CURRENTEDITOR = 1;
-                Actions.newEditor1({ data: path });
+                Actions.newEditor1({ data: path, imgWidth: w, imgHeight: h });
             }
         }
     }
@@ -53,7 +54,7 @@ export default class PopUpSelection extends Component {
                 this.setState({
                     image: { uri: image.path, width: image.width, height: image.height },
                     images: null
-                }, () => this.openEditor(image.path));
+                }, () => this.openEditor(image.path, image.width, image.height));
             })
             .catch(e => console.log(e));
 
@@ -75,7 +76,7 @@ export default class PopUpSelection extends Component {
                 this.setState({
                     image: { uri: image.path, width: image.width, height: image.height, mime: image.mime },
                     images: null
-                }, () => this.openEditor(image.path));;
+                }, () => this.openEditor(image.path, image.width, image.height));
             })
             .catch(e => { console.log(e); });
     }

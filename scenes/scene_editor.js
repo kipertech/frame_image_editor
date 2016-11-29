@@ -115,6 +115,8 @@ export default class EditorScene extends Component {
                 this.setState({
                     thumbSize, thumbLeft, thumbTop
                 });
+
+                console.log(thumbSize);
             },
             onResponderTerminationRequest: (evt, gestureState) => true,
             onResponderRelease: (evt, gestureState) => {},
@@ -341,17 +343,17 @@ export default class EditorScene extends Component {
 
     getImageFrame()
     {
-        const thumbSize = this.state.thumbSize;
         if (Platform.OS == 'ios')
         {
             return(
                 <Image
                     source={{ uri: this.props.data }}
                     style={{
-                        width: thumbSize, height: thumbSize,
+                        width: this.state.thumbSize, height: this.state.thumbSize,
                         position: 'absolute', left: this.state.thumbLeft, top: this.state.thumbTop,
-                        backgroundColor: 'gray',
+                        backgroundColor: 'white',
                         transform: [{ rotate: this.state.rotateAngle + ' deg' }] }}
+                    resizeMode="contain"
                 />
             )
         }
@@ -398,8 +400,8 @@ export default class EditorScene extends Component {
             if (Platform.OS == 'ios')
                 return(
                     <View style={{
-                        width: this.state.thumbSize, height: this.state.thumbSize,
-                        position: 'absolute', left: this.state.thumbLeft, top: this.state.thumbTop + 50 + barHeight, backgroundColor: 'transparent' }}
+                        width: this.state.imageSize, height: this.state.imageSize,
+                        position: 'absolute', left: 0, top: 50 + barHeight, backgroundColor: 'transparent' }}
                           {...this.gestureResponder}
                     />
                 )

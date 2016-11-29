@@ -10,10 +10,6 @@ export default class LoadingModal extends Component
         super(props);
     }
 
-    propTypes: {
-        loadingText: React.PropTypes.string;
-    }
-
     open() 
     {
         this.mainModal.open();
